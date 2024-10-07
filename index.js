@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 // app.use(express.static('public'));
 
-
+// kir
 
 app.use(session({
     secret: 'your_secret_key',
