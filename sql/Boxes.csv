@@ -1,0 +1,3 @@
+BoxID,UserID,BoxName,QRCode,CreatedAt
+1,1,Living Room Box,qr_code_1,2023-09-03 12:00:00
+2,2,Kitchen Box,qr_code_2,2023-09-03 13:15:00

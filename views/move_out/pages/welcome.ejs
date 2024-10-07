@@ -1,0 +1,12 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container">
+    <h1>Welcome to Alhamad Relocations</h1>
+    <% if (isAuthenticated && user) { %>
+        <p>Hello, <strong><%= user.fullName %></strong>! Welcome back.</p>
+    <% } else { %>
+        <p>Thank you for joining! Feel free to explore the website.</p>
+    <% } %>
+</div>
+
+<%- include("./../partials/footer.ejs") %>

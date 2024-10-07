@@ -1,0 +1,4 @@
+UserID,Email,PasswordHash,FullName,RegisteredAt,EmailVerified
+1, "user1@example.com", "hashed_password1", "salt_value1", "John Doe", "2023-09-01 10:00:00", true
+2, "user2@example.com", "hashed_password2", "salt_value2", "Jane Smith", "2023-09-02 11:30:00", false
+

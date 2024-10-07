@@ -1,0 +1,111 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container header-spacing">
+    <div class="row justify-content-center">
+        <div class="col-md-10 box-wrapper">
+            <h2 class="text-center">My Labels</h2>
+            <div class="text-center mb-4">
+                <a href="/create-label" class="btn btn-primary">Create New Label</a>
+            </div>
+
+            <div class="row">
+                <% if (labels.length > 0) { %>
+                    <% labels.forEach(function(label) { %>
+                        <div class="col-md-4 mb-4">
+                            <div class="card text-center label-card">
+                                <div class="card-body p-0">
+                                    <div class="label-image-container position-relative">
+                                        <!-- Label Design Image -->
+                                        <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
+
+                                        <!-- Label Overlay -->
+                                        <div class="label-overlay">
+                                            <h5 class="label-name"><%= label.LabelName %></h5>
+                                            <p class="label-type">
+                                                <%= label.LabelOption %> | <%= label.Status ? (label.Status.charAt(0).toUpperCase() + label.Status.slice(1)) : 'Private' %>
+                                            </p>
+                                        </div>
+
+                                        <!-- Hover buttons (View, Edit, Delete, Share) -->
+                                        <div class="label-hover-overlay">
+                                            <div class="btn-group-vertical">
+                                                <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
+                                                <a href="/labels/edit/<%= label.LabelID %>" class="btn btn-warning">Edit</a>
+                                                <!-- Delete Form -->
+                                                <form action="/labels/delete/<%= label.LabelID %>" method="POST" style="display:inline;" class="delete-form">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                                <% if (label.Status === 'private') { %>
+                                                    <!-- Button to open share modal -->
+                                                    <button type="button" class="btn btn-info share-button" data-label-id="<%= label.LabelID %>" data-label-name="<%= label.LabelName %>">Share</button>
+                                                <% } %>
+                                            </div>
+                                        </div>
+
+                                        <!-- QR code with no background -->
+                                        <div class="qr-code-container" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: none;">
+                                            <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image" style="max-width: 100px; background-color: transparent !important; border: none;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="text-center">No labels found. Create your first label!</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form id="shareForm" method="post">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Share Label</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                    <div class="modal-body">
+                        <p>Enter the email address of the person you want to share the label with:</p>
+                        <div class="form-group">
+                            <label for="recipientEmail">Recipient Email:</label>
+                            <input type="email" class="form-control" id="recipientEmail" name="recipientEmail" required>
+                        </div>
+                    </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Share Label</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>
+
+<script>
+    $(document).ready(function() {
+        // Handle share button clicks
+        $('.share-button').on('click', function() {
+            var labelId = $(this).data('label-id');
+            var labelName = $(this).data('label-name');
+
+            $('#shareModalLabel').text('Share Label: ' + labelName);
+            $('#shareForm').attr('action', '/labels/share/' + labelId);
+
+            $('#shareModal').modal('show');
+        });
+
+        // Confirmation before deleting
+        $('.delete-form').on('submit', function(event) {
+            if (!confirm('Are you sure you want to delete this label? This action cannot be undone.')) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>

@@ -1,0 +1,175 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 box-wrapper">
+            <h2 class="text-center">Edit Label</h2>
+
+            <% if (errorMessage) { %>
+                <div class="alert alert-danger">
+                    <p><%= errorMessage %></p>
+                </div>
+            <% } %>
+
+            <form action="/labels/edit/<%= label.LabelID %>" method="post" enctype="multipart/form-data">
+                <!-- Label Name -->
+                <div class="form-group">
+                    <label for="labelName">Label Name:</label>
+                    <input type="text" class="form-control" id="labelName" name="labelName" value="<%= label.LabelName %>" required>
+                </div>
+
+                <!-- Label Option -->
+                <div class="form-group">
+                    <label for="labelOption">Label Option:</label>
+                    <select class="form-control" id="labelOption" name="labelOption">
+                        <option value="hazard" <%= label.LabelOption === 'hazard' ? 'selected' : '' %>>Hazard</option>
+                        <option value="normal" <%= label.LabelOption === 'normal' ? 'selected' : '' %>>Normal</option>
+                        <option value="fragile" <%= label.LabelOption === 'fragile' ? 'selected' : '' %>>Fragile</option>
+                    </select>
+                </div>
+
+                <!-- Label Visibility -->
+                <div class="form-group">
+                    <label>Label Visibility:</label><br>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="status" id="statusPublic" value="public" <%= label.Status === 'public' ? 'checked' : '' %> required>
+                        <label class="form-check-label" for="statusPublic">Public</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="status" id="statusPrivate" value="private" <%= label.Status === 'private' ? 'checked' : '' %>>
+                        <label class="form-check-label" for="statusPrivate">Private</label>
+                    </div>
+                </div>
+
+                <!-- Existing Content Carousel -->
+                <% if (labelContents && labelContents.length > 0) { %>
+                    <div class="form-group">
+                        <label>Existing Content:</label>
+
+                        <div id="contentCarousel" class="carousel slide" data-ride="carousel">
+                            <div class="carousel-inner">
+                                <% labelContents.forEach((content, index) => { %>
+                                    <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+                                        <% if (content.ContentType === 'image') { %>
+                                            <img src="/uploads/<%= content.ContentData %>" class="d-block w-100" alt="Image">
+                                        <% } else if (content.ContentType === 'audio') { %>
+                                            <div class="audio-content-carousel">
+                                                <audio controls class="w-100">
+                                                    <source src="/uploads/<%= content.ContentData %>" type="audio/mpeg">
+                                                    Your browser does not support the audio element.
+                                                </audio>
+                                            </div>
+                                        <% } else if (content.ContentType === 'text') { %>
+                                            <div class="text-content-carousel">
+                                                <p class="carousel-text"><%= content.ContentData %></p>
+                                            </div>
+                                        <% } %>
+                                        <!-- Centered Delete Button -->
+                                        <button type="button" class="btn btn-danger btn-sm delete-button" data-content-id="<%= content.ContentID %>">
+                                            <i class="fa fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                <% }) %>
+                            </div>
+                            <!-- Controls -->
+                            <a class="carousel-control-prev" href="#contentCarousel" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#contentCarousel" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Hidden inputs for removed content IDs -->
+                <div id="removedContentInputs"></div>
+
+                <!-- Add New Content -->
+                <div class="form-group">
+                    <label for="contentType">Add New Content:</label>
+                    <select class="form-control" id="contentType" name="contentType">
+                        <option value="">Select Content Type</option>
+                        <option value="text">Text</option>
+                        <option value="image">Images</option>
+                        <option value="audio">Audio</option>
+                    </select>
+                </div>
+
+                <!-- Text Content Input -->
+                <div class="form-group" id="textContent" style="display: none;">
+                    <label for="contentText">Text Content:</label>
+                    <textarea class="form-control" id="contentText" name="contentText"></textarea>
+                </div>
+
+                <!-- Image Content Input -->
+                <div class="form-group" id="imageContent" style="display: none;">
+                    <label for="contentImages">Upload Images:</label>
+                    <input type="file" class="form-control-file" id="contentImages" name="contentImages" accept="image/*" multiple>
+                </div>
+
+                <!-- Audio Content Input -->
+                <div class="form-group" id="audioContent" style="display: none;">
+                    <label for="contentAudio">Upload Audio:</label>
+                    <input type="file" class="form-control-file" id="contentAudio" name="contentAudio" accept="audio/*">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary">Update Label</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>
+
+<script>
+    $(document).ready(function() {
+        // Disable automatic carousel cycling
+        $('#contentCarousel').carousel({
+            interval: false
+        });
+
+        // Show/hide content input fields based on selected content type
+        document.getElementById('contentType').addEventListener('change', function() {
+            var contentType = this.value;
+            document.getElementById('textContent').style.display = contentType === 'text' ? 'block' : 'none';
+            document.getElementById('imageContent').style.display = contentType === 'image' ? 'block' : 'none';
+            document.getElementById('audioContent').style.display = contentType === 'audio' ? 'block' : 'none';
+        });
+
+        // Handle delete button clicks
+        $('.delete-button').on('click', function() {
+            var contentId = $(this).data('content-id');
+            // Add a hidden input to the form
+            $('#removedContentInputs').append(
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'removeContent[]',
+                    value: contentId
+                })
+            );
+            // Remove the carousel item
+            var carouselItem = $(this).closest('.carousel-item');
+            var isActive = carouselItem.hasClass('active');
+            carouselItem.remove();
+
+            // If the removed item was active, set the next item as active
+            if (isActive) {
+                $('#contentCarousel .carousel-item').first().addClass('active');
+            }
+
+            // Re-initialize the carousel to update items
+            $('#contentCarousel').carousel('dispose').carousel({
+                interval: false
+            });
+
+            // If no items left, hide the carousel controls
+            if ($('#contentCarousel .carousel-item').length === 0) {
+                $('#contentCarousel').hide();
+            }
+        });
+    });
+</script>

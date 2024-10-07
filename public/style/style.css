@@ -1,0 +1,534 @@
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    margin-top: 50px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Typography */
+h1, h2, h3 {
+    color: #333;
+    text-align: center;
+}
+
+h2.text-center {
+    color: #007BFF;
+    margin-bottom: 20px;
+}
+
+a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+/* Navigation Bar Styles */
+.navbar.navbar-expand-lg {
+    background-color: #222222 !important;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link {
+    color: white !important;
+}
+
+.navbar .dropdown-menu {
+    background-color: #222222 !important;
+}
+
+.navbar .dropdown-item {
+    color: white !important;
+}
+
+.navbar .nav-link:hover,
+.navbar .dropdown-item:hover {
+    background-color: #333333 !important;
+}
+
+/* Footer Styles */
+footer {
+    background-color: #222222;
+    color: white;
+    text-align: center;
+    padding: 30px 0;
+    width: 100%;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.footerContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 30px;
+}
+
+.socialIcons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.socialIcons a {
+    text-decoration: none;
+    padding: 20px;
+    background-color: white;
+    margin: 10px;
+    border-radius: 50%;
+    transition: background-color 0.5s, transform 0.5s;
+}
+
+.socialIcons a i {
+    font-size: 3em;
+    color: black;
+    opacity: 0.9;
+}
+
+.socialIcons a:hover {
+    background-color: #111;
+    transform: scale(1.2);
+}
+
+.socialIcons a:hover i {
+    color: white;
+}
+
+.footerBottom {
+    background-color: #222222;
+    padding: 10px 0;
+    text-align: center;
+    width: 100%;
+}
+
+.footerBottom p {
+    color: white;
+    margin: 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 700px) {
+    .socialIcons a {
+        padding: 15px;
+    }
+}
+
+/* Box and Card Styles */
+.box-wrapper {
+    border: 2px solid #007BFF;
+    padding: 30px;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card {
+    border: 1px solid #007BFF;
+    border-radius: 10px;
+}
+
+.card-title {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.card-text {
+    font-size: 1rem;
+    color: #666;
+}
+
+/* Label Image and Overlay Styles */
+.label-image-container {
+    position: relative;
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.label-image {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+/* Updated .label-overlay Styles */
+.label-overlay {
+    position: absolute;
+    top: 0; /* Position at the top */
+    left: 5;
+    width: 80%;
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    z-index: 1;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.label-name {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.label-type {
+    font-size: 1.2rem;
+    margin: 5px 0 0;
+    font-weight: normal;
+}
+
+/* Responsive Image Handling */
+.img-fluid {
+    object-fit: contain;
+    max-height: 300px;
+    width: 100%;
+}
+
+/* Carousel and Slider Styles */
+.carousel-inner .carousel-item img {
+    max-height: 400px;
+    margin: 0 auto;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: auto;
+    background-image: none;
+    opacity: 1;
+    color: #333;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: invert(100%);
+    opacity: 0.5;
+}
+
+.carousel-control-prev-icon:hover,
+.carousel-control-next-icon:hover {
+    opacity: 1;
+}
+
+/* Alert Styles */
+.alert-danger {
+    color: #ff4d4d;
+    background-color: #ffe6e6;
+    border-color: #ff4d4d;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Buttons and Form Styles */
+.btn-group-toggle .btn {
+    margin-right: 10px;
+}
+
+.btn-outline-primary {
+    color: #007BFF;
+    border-color: #007BFF;
+    background-color: #fff;
+    transition: all 0.3s;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
+    color: #fff;
+    background-color: #007BFF;
+}
+
+button.btn-primary {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 5px;
+    background-color: #007BFF;
+    border: none;
+}
+
+button.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.form-control-file {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.content-input {
+    margin-top: 20px;
+}
+
+.content-input textarea,
+.content-input input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+textarea.form-control {
+    resize: none;
+}
+
+.qr-code-container {
+    background: none; /* Make sure the container has no background */
+}
+
+.qr-code-container img {
+    max-width: 200px; /* Adjust size as needed */
+    background-color: transparent; /* Ensure the QR code image has a transparent background */
+    border: none; /* Remove any border */
+}
+
+
+/* Hide hover buttons initially */
+.label-hover-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* When hovering over the label, show the buttons */
+.label-image-container:hover .label-hover-overlay {
+    opacity: 1;
+}
+
+/* Button group styles */
+.label-hover-overlay .btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Buttons styling */
+.label-hover-overlay .btn {
+    margin: 5px 0;
+    width: 100px;
+    transition: all 0.3s ease;
+}
+
+/* Card hover effect */
+.label-card {
+    transition: transform 0.3s ease;
+}
+
+.label-card:hover {
+    transform: scale(1.05); /* Slight zoom effect */
+}
+
+/* Label Image and Overlay Styles */
+.label-image-container {
+    position: relative;
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.label-image {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+/* Updated .label-overlay Styles */
+.label-overlay {
+    position: absolute;
+    top: 0;
+    left: 5;
+    width: 80%;
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    z-index: 1;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.label-name {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.label-type {
+    font-size: 1.2rem;
+    margin: 5px 0 0;
+    font-weight: normal;
+}
+
+/* QR code container styling */
+.qr-code-container {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: none;
+}
+
+.qr-code-container img {
+    max-width: 100px;
+    background-color: transparent !important;
+    border: none;
+}
+
+.text-content-carousel {
+    height: 300px; /* Adjust height as needed */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8f9fa; /* Light grey background */
+}
+
+.carousel-text {
+    font-size: 1.2em; /* Adjust font size as needed */
+    padding: 15px;
+    color: #333; /* Text color */
+}
+
+/* Delete Button at Bottom Center */
+.delete-button {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.delete-button:hover {
+    opacity: 1;
+}
+
+.delete-button i {
+    margin-right: 5px;
+}
+
+
+/* Carousel and Slider Styles for Edit Label */
+.edit-label-carousel .carousel-fixed-height {
+    height: 500px;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    position: relative;
+}
+
+.edit-label-carousel .carousel-fixed-height .carousel-inner {
+    height: 100%;
+}
+
+.edit-label-carousel .carousel-fixed-height .carousel-item {
+    height: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.edit-label-carousel .carousel-fixed-height img,
+.edit-label-carousel .text-content-carousel,
+.edit-label-carousel .audio-content-carousel {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.edit-label-carousel .text-content-carousel,
+.edit-label-carousel .audio-content-carousel {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+}
+
+.edit-label-carousel .carousel-text {
+    font-size: 1.5em;
+    color: #333;
+}
+
+/* Delete Button at Bottom Center */
+.edit-label-carousel .delete-button {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.edit-label-carousel .delete-button:hover {
+    opacity: 1;
+}
+
+.edit-label-carousel .delete-button i {
+    margin-right: 5px;
+}
+
+/* Adjusting Carousel Controls */
+.edit-label-carousel .carousel-control-prev,
+.edit-label-carousel .carousel-control-next {
+    width: auto;
+    background-image: none;
+    opacity: 1;
+    color: #333;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.edit-label-carousel .carousel-control-prev-icon,
+.edit-label-carousel .carousel-control-next-icon {
+    filter: invert(100%);
+    opacity: 0.5;
+}
+
+.edit-label-carousel .carousel-control-prev-icon:hover,
+.edit-label-carousel .carousel-control-next-icon:hover {
+    opacity: 1;
+}
+
+.profile-pic {
+    border-radius: 50%;  /* Ensures the image is circular */
+    width: 50px;         /* Sets the width */
+    height: 50px;        /* Sets the height */
+    object-fit: cover;   /* Ensures the image fits within the circle */
+    border: 2px solid #ddd;  /* Optional: Adds a border around the image */
+    margin-right: 10px;  /* Adds space to the right of the image */
+}
+
+
+

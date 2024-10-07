@@ -1,0 +1,26 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div class="col-md-6">
+        <h2>Verify Your Email</h2>
+        
+        <% if (email) { %>
+            <p>Verification code has been sent to your email: <strong><%= email %></strong></p>
+        <% } %>
+
+        <form action="/verify-code" method="POST">
+            <input type="hidden" name="email" value="<%= email %>" required>
+            <div class="form-group">
+                <label for="verificationCode">6-Digit Verification Code</label>
+                <input type="text" class="form-control" id="verificationCode" name="verificationCode" placeholder="Enter Verification Code" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Verify</button>
+        </form>
+    </div>
+
+    <div class="col-md-5 right-image-container">
+        <img src="https://cdn.discordapp.com/attachments/1220116287414603987/1283459529341927565/image.png?ex=66e31255&is=66e1c0d5&hm=fc085f2c8b5c36744f6cd7eb4c4de023937a426cefcceeb4f95b75112ccaa3db&" alt="Right-side Image" class="img-responsive" style="max-width: 100%;">
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>

@@ -1,0 +1,34 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div class="col-md-6">
+        <h2>Register</h2>
+        <form action="/register" method="POST">
+            <div class="form-group">
+                <label for="fullName">Full Name:</label>
+                <input type="text" class="form-control" id="fullName" name="fullName" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
+
+            <% if (errorMessage) { %>
+                <div class="alert alert-danger" style="margin-top: 10px;">
+                    <%= errorMessage %>
+                </div>
+            <% } %>
+        </form>
+    </div>
+
+    <div class="col-md-5 right-image-container">
+        <img src="https://cdn.discordapp.com/attachments/1220116287414603987/1283459529341927565/image.png?ex=66e31255&is=66e1c0d5&hm=fc085f2c8b5c36744f6cd7eb4c4de023937a426cefcceeb4f95b75112ccaa3db&" alt="Right-side Image" class="img-responsive" style="max-width: 100%;">
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>

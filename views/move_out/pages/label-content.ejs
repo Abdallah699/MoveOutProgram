@@ -1,0 +1,135 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 box-wrapper" style="border: 2px solid #007BFF; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
+            <h2 class="text-center">Add Contents to Your Label</h2>
+            
+            <p class="text-center">Choose one option to describe your label contents.</p>
+
+            <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+                <div class="alert alert-danger">
+                    <p><%= errorMessage %></p>
+                </div>
+            <% } %>
+
+            <form action="/create-label/submit" method="post" enctype="multipart/form-data">
+                <!-- Hidden inputs to carry over previous data -->
+                <input type="hidden" name="labelDesign" value="<%= labelDesign %>">
+                <input type="hidden" name="labelName" value="<%= labelName %>">
+                <input type="hidden" name="labelOption" value="<%= labelOption %>">
+                <!-- Added hidden input for status -->
+                <input type="hidden" name="status" value="<%= status %>">
+
+                <!-- Content Type Selection -->
+                <div class="form-group">
+                    <label for="contentType">Choose content type:</label>
+                    <div class="btn-group-toggle">
+                        <label class="btn btn-outline-primary content-type-btn">
+                            <input type="radio" name="contentType" value="text" id="contentTextOption" autocomplete="off" required> Text Description
+                        </label>
+                        <label class="btn btn-outline-primary content-type-btn">
+                            <input type="radio" name="contentType" value="audio" id="contentAudioOption" autocomplete="off"> Upload Audio
+                        </label>
+                        <label class="btn btn-outline-primary content-type-btn">
+                            <input type="radio" name="contentType" value="image" id="contentImageOption" autocomplete="off"> Upload Images
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Text Content Input -->
+                <div id="contentTextInput" class="content-input" style="display: none;">
+                    <div class="form-group">
+                        <label for="contentText">Text Description:</label>
+                        <textarea class="form-control" name="contentText" id="contentText" rows="4" placeholder="Enter a description of the label contents"></textarea>
+                    </div>
+                </div>
+
+                <!-- Audio Content Input -->
+                <div id="contentAudioInput" class="content-input" style="display: none;">
+                    <div class="form-group">
+                        <label for="contentAudio">Upload Audio File:</label>
+                        <input type="file" class="form-control-file" name="contentAudio" accept="audio/*">
+                    </div>
+                </div>
+
+                <!-- Image Content Input -->
+                <div id="contentImageInput" class="content-input" style="display: none;">
+                    <div class="form-group">
+                        <label for="contentImages">Upload Images:</label>
+                        <input type="file" class="form-control-file" name="contentImages" id="contentImages" multiple accept="image/*">
+                    </div>
+                    <!-- Image Preview Area -->
+                    <div id="imagePreview" style="display: flex; flex-wrap: wrap;"></div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Submit Label</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Include Bootstrap JS and dependencies if using Bootstrap's JavaScript features -->
+<!-- Uncomment the following lines if needed -->
+<!--
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+-->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle content type selection
+        document.querySelectorAll('input[name="contentType"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.content-input').forEach(function(inputSection) {
+                    inputSection.style.display = 'none';
+                });
+
+                if (this.value === 'text') {
+                    document.getElementById('contentTextInput').style.display = 'block';
+                } else if (this.value === 'audio') {
+                    document.getElementById('contentAudioInput').style.display = 'block';
+                } else if (this.value === 'image') {
+                    document.getElementById('contentImageInput').style.display = 'block';
+                }
+
+                document.querySelectorAll('.content-type-btn').forEach(function(btn) {
+                    btn.classList.remove('active');
+                });
+                this.parentNode.classList.add('active');
+            });
+        });
+
+        // Handle image previews
+        document.getElementById('contentImages').addEventListener('change', function() {
+            var preview = document.getElementById('imagePreview');
+            preview.innerHTML = ''; 
+
+            if (this.files) {
+                Array.from(this.files).forEach(function(file) {
+                    if (/\.(jpe?g|png|gif|bmp)$/i.test(file.name)) {
+                        var reader = new FileReader();
+
+                        reader.addEventListener('load', function() {
+                            var img = document.createElement('img');
+                            img.src = reader.result;
+                            img.style.maxWidth = '150px';
+                            img.style.margin = '10px';
+                            img.style.border = '1px solid #ddd';
+                            img.style.borderRadius = '4px';
+                            preview.appendChild(img);
+                        }, false);
+
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+<%- include("./../partials/footer.ejs") %>

@@ -1,0 +1,3 @@
+ContentID,BoxID,ContentType,ContentText,ContentURL,CreatedAt
+1,1,text,List of items in the living room,,2023-09-03 12:30:00
+2,2,image,,http://example.com/image1.jpg,2023-09-03 13:45:00

@@ -1,0 +1,32 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container header-spacing">
+    <h2 class="text-center"><%= userName %>'s Public Labels</h2>
+
+    <div class="row">
+        <% if (labels.length > 0) { %>
+            <% labels.forEach(function(label) { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card text-center label-card">
+                        <div class="card-body p-0">
+                            <div class="label-image-container position-relative">
+                                <!-- Label Design Image -->
+                                <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
+                                
+                                <!-- Label Overlay -->
+                                <div class="label-overlay">
+                                    <h5 class="label-name"><%= label.LabelName %></h5>
+                                    <p class="label-type"><%= label.LabelOption %></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p class="text-center">No public labels available.</p>
+        <% } %>
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>

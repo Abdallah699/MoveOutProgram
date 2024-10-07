@@ -1,0 +1,52 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container mt-5">
+    <h1>Admin Dashboard</h1>
+    
+    <h2>Users</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Profile Picture</th>
+                <th>Admin</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% users.forEach(function(user) { %>
+                <tr>
+                    <td><%= user.FullName %></td>
+                    <td><%= user.Email %></td>
+                    <td><img src="<%= user.ProfilePicture %>" alt="Profile Picture" style="width: 50px; height: 50px;"></td>
+                    <td><%= user.Admin ? 'Yes' : 'No' %></td>
+                    <td><%= user.IsDeactivated ? 'Deactivated' : 'Active' %></td>
+                    <td>
+                        <form action="/admin/users/<%= user.UserID %>/toggle" method="POST">
+                            <button class="btn btn-sm <%= user.IsDeactivated ? 'btn-success' : 'btn-warning' %>">
+                                <%= user.IsDeactivated ? 'Activate' : 'Deactivate' %>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <h2>Send Marketing Email</h2>
+    <form action="/admin/send-marketing-email" method="POST">
+        <div class="form-group">
+            <label for="emailSubject">Email Subject:</label>
+            <input type="text" class="form-control" id="emailSubject" name="emailSubject" required>
+        </div>
+        <div class="form-group">
+            <label for="emailBody">Email Body:</label>
+            <textarea class="form-control" id="emailBody" name="emailBody" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Send Email</button>
+    </form>
+</div>
+
+<%- include("./../partials/footer.ejs") %>

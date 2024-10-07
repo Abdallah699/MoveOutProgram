@@ -1,0 +1,9 @@
+{
+    "host": "MSI.local",
+    "user": "dbadm",
+    "password": "P@ssw0rd",
+    "database": "moveout",
+    "multipleStatements": true,
+    "googleClientID": "YOUR_ACTUAL_GOOGLE_CLIENT_ID",
+    "googleClientSecret": "YOUR_ACTUAL_GOOGLE_CLIENT_SECRET"
+}

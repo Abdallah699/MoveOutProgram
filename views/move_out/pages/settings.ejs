@@ -1,0 +1,99 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 box-wrapper">
+            <h1 class="text-center mb-4">Account Settings</h1>
+
+            <!-- Profile picture and update form -->
+            <div class="profile-section text-center mb-4">
+                <img src="<%= user.ProfilePicture ? user.ProfilePicture : '/uploads/profile_pictures/default.png' %>" 
+                     alt="Profile Picture" 
+                     class="profile-pic img-thumbnail mb-3">
+                <form action="/account/update-picture" method="POST" enctype="multipart/form-data">
+                    <input type="file" name="profilePicture" accept="image/*" class="form-control-file">
+                    <button type="submit" class="btn btn-primary mt-2">Update Profile Picture</button>
+                </form>
+            </div>
+
+            <!-- Success and error messages -->
+            <% if (successMessage) { %>
+                <div class="alert alert-success">
+                    <%= successMessage %>
+                </div>
+            <% } %>
+
+            <% if (errorMessage) { %>
+                <div class="alert alert-danger">
+                    <%= errorMessage %>
+                </div>
+            <% } %>
+
+            <!-- Change password form (for non-Google users) -->
+            <% if (user.PasswordHash !== '0') { %>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2>Change Password</h2>
+                    </div>
+                    <div class="card-body">
+                        <form action="/account/update-password" method="POST">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                                <small class="form-text text-muted">Must contain at least one uppercase letter and one number.</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Password</button>
+                        </form>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="alert alert-info">
+                    <p>Password changes are not allowed for Google OAuth users.</p>
+                </div>
+            <% } %>
+
+            <hr>
+
+            <!-- Deactivate account section -->
+            <div class="deactivate-section mt-4">
+                <h2 class="text-center text-danger">Deactivate Account</h2>
+                <p class="text-center text-muted">Deactivating your account will log you out and prevent you from logging in until reactivated. You will receive an email with reactivation or deletion options.</p>
+                
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-outline-danger btn-lg" data-toggle="modal" data-target="#deactivateModal">
+                        Deactivate My Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deactivate Confirmation Modal -->
+<div class="modal fade" id="deactivateModal" tabindex="-1" role="dialog" aria-labelledby="deactivateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deactivateModalLabel">Confirm Account Deactivation</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to deactivate your account? This action will log you out and prevent access until reactivated.</p>
+            </div>
+            <div class="modal-footer">
+                <form action="/account/deactivate" method="POST">
+                    <button type="submit" class="btn btn-danger">Yes, Deactivate</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>
