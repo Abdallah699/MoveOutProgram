@@ -56,7 +56,7 @@ const upload = multer({
 });
 
 const transporter = nodemailer.createTransport({
-    service: "Gmail",
+    service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -345,38 +345,96 @@ router.post('/labels/edit/:id', requireLogin, upload.fields([
     res.redirect('/labels');
 });
 
+// ... [Other code in routes.js] ...
+
 router.post('/labels/share/:id', requireLogin, async (req, res) => {
+    console.log('Received POST /labels/share/:id');
+    console.log('req.params:', req.params);
+    console.log('req.body:', req.body);
+    console.log('req.user:', req.user);
+
     const labelId = req.params.id;
-    const { recipientEmail } = req.body;
     const userId = req.user.UserID;
+    const { recipientEmail } = req.body;
 
-    const connection = await createConnection();
-    const [labelRows] = await connection.query('SELECT * FROM Labels WHERE LabelID = ? AND UserID = ?', [labelId, userId]);
+    console.log('Received recipientEmail:', recipientEmail);
+    console.log('Type of recipientEmail:', typeof recipientEmail);
 
-    if (labelRows.length === 0) {
-        return res.status(403).send('You do not have permission to share this label.');
+    if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.includes('@')) {
+        console.log('Invalid recipient email:', recipientEmail);
+        return res.status(400).send('Valid recipient email is required.');
     }
 
-    const shareToken = crypto.randomBytes(16).toString('hex');
+    const trimmedRecipientEmail = recipientEmail.trim();
+    console.log('Trimmed recipientEmail:', trimmedRecipientEmail);
 
-    await connection.query(
-        'INSERT INTO SharedLabels (LabelID, ShareToken, RecipientEmail) VALUES (?, ?, ?)',
-        [labelId, shareToken, recipientEmail]
-    );
+    console.log('Sharing label with recipient:', trimmedRecipientEmail);
 
-    const shareLink = `http://localhost:1339/labels/view/${labelId}?token=${shareToken}`;
+    const connection = await createConnection();
+    try {
+        const [labelRows] = await connection.query('SELECT * FROM Labels WHERE LabelID = ? AND UserID = ?', [labelId, userId]);
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: recipientEmail,
-        subject: `Label Shared with You: ${labelRows[0].LabelName}`,
-        text: `A label has been shared with you. Click the link below to view it:\n\n${shareLink}`
-    };
+        if (labelRows.length === 0) {
+            console.log('Label not found or user does not have permission.');
+            return res.status(403).send('You do not have permission to share this label.');
+        }
 
-    await transporter.sendMail(mailOptions);
+        // Check if the recipient is the same as the owner
+        if (trimmedRecipientEmail === req.user.Email) {
+            console.log('Recipient is the same as the owner.');
+            return res.status(400).send('You cannot share the label with yourself.');
+        }
 
-    res.redirect('/labels');
+        const shareToken = crypto.randomBytes(16).toString('hex');
+        console.log('Generated share token:', shareToken);
+
+        await connection.query(
+            'INSERT INTO SharedLabels (LabelID, ShareToken, RecipientEmail) VALUES (?, ?, ?)',
+            [labelId, shareToken, trimmedRecipientEmail]
+        );
+        console.log('SharedLabels insert success');
+
+        const shareLink = `http://localhost:1339/labels/view/${labelId}?token=${shareToken}`;
+        console.log('Share link:', shareLink);
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: trimmedRecipientEmail,
+            subject: `Label Shared with You: ${labelRows[0].LabelName}`,
+            text: `A label has been shared with you by ${req.user.FullName}. Click the link below to view it:\n\n${shareLink}`
+        };
+
+        // Send the email
+        console.log('Attempting to send email with options:', JSON.stringify(mailOptions, null, 2));
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log('Email sent successfully. Response:', JSON.stringify(info, null, 2));
+        } catch (emailError) {
+            console.error('Error sending email:', emailError);
+            throw emailError; // Re-throw to be caught by the outer try-catch
+        }
+
+        return res.redirect('/labels');
+    } catch (error) {
+        console.error('Error sharing label or sending email:', error);
+        console.error('Error stack:', error.stack);
+        if (!res.headersSent) {
+            return res.status(500).send('Error sharing label or sending email.');
+        }
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
+    }
 });
+
+// ... [Rest of your routes] ...
+
+
+
+
+
+
 
 router.get('/leaderboard', requireLogin, async (req, res) => {
     const connection = await createConnection();

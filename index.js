@@ -10,9 +10,6 @@ app.use('/uploads', express.static('public/uploads'));
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-// app.use(express.static('public'));
-
-// kir
 
 app.use(session({
     secret: 'your_secret_key',
@@ -24,14 +21,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use((req, res, next) => {
-    res.locals.isAuthenticated = !!req.user; // Set isAuthenticated flag based on req.user presence
-    res.locals.user = req.user || null; // Set user object if it exists
+    res.locals.isAuthenticated = !!req.user; 
+    res.locals.user = req.user || null; 
     next();
 });
 
-
-
-// Routes
 app.use("/", routes);
 
 const port = 1339;
