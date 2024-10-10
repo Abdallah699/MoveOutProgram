@@ -10,13 +10,21 @@
                     <div class="card text-center label-card">
                         <div class="card-body p-0">
                             <div class="label-image-container position-relative">
-                                <!-- Label Design Image -->
                                 <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
                                 
-                                <!-- Label Overlay -->
                                 <div class="label-overlay">
                                     <h5 class="label-name"><%= label.LabelName %></h5>
                                     <p class="label-type"><%= label.LabelOption %></p>
+                                </div>
+
+                                <div class="label-hover-overlay">
+                                    <div class="btn-group-vertical">
+                                        <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
+                                    </div>
+                                </div>
+
+                                <div class="qr-code-container" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: none;">
+                                    <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image" style="max-width: 100px; background-color: transparent !important; border: none;">
                                 </div>
                             </div>
                         </div>

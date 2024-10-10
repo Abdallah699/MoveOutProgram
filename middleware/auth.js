@@ -10,7 +10,6 @@ async function requireLogin(req, res, next) {
     }
 
     try {
-        // Query the session from the database
         const [session] = await db.query(
             'SELECT * FROM Sessions WHERE SessionToken = ? AND ExpiresAt > NOW()',
             [sessionToken]
@@ -23,7 +22,6 @@ async function requireLogin(req, res, next) {
 
         console.log(`Session found: ${JSON.stringify(session[0])}`);
 
-        // Query the user linked to the session
         const [user] = await db.query(
             'SELECT FullName, UserID FROM Users WHERE UserID = ?',
             [session[0].UserID]
@@ -34,7 +32,6 @@ async function requireLogin(req, res, next) {
             return res.redirect('/login');
         }
 
-        // Attach user data to the request object
         req.user = {
             UserID: user[0].UserID,
             FullName: user[0].FullName

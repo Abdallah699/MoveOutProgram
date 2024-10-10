@@ -1,4 +1,3 @@
-// middleware/permissions.js
 
 const { createConnection } = require('../src/cli');
 
@@ -26,21 +25,18 @@ async function canViewLabel(req, res, next) {
         req.label = label;
         console.log(`Label Data: ${JSON.stringify(label)}`);
 
-        // Check if the user is the owner
         if (userId && label.UserID === userId) {
             console.log('User is the owner of the label');
             req.canEdit = true;
             return next();
         }
 
-        // Check if the label is public
         if (label.Status === 'public') {
             console.log('Label is public');
             req.canEdit = false;
             return next();
         }
 
-        // Check if a valid share token is provided
         if (shareToken) {
             console.log('Checking share token validity');
             const [shareRows] = await connection.query(
@@ -57,7 +53,6 @@ async function canViewLabel(req, res, next) {
             }
         }
 
-        // User does not have permission
         console.log('User does not have permission to view this label');
         return res.status(403).send('You do not have permission to view this label.');
     } catch (error) {

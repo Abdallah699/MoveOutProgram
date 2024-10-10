@@ -1,11 +1,9 @@
 const db = require('../config/sql');
 
 async function requireLogin(req, res, next) {
-    // Check if the user is authenticated via Passport (Google login)
     if (req.isAuthenticated()) {
         console.log('Authenticated via Passport.');
         
-        // If logged in via Google, or email is verified, proceed
         if (req.user.GoogleID || req.user.EmailVerified) {
             return next();
         } else {
@@ -14,7 +12,6 @@ async function requireLogin(req, res, next) {
         }
     }
 
-    // If not authenticated via Passport, fall back to session token
     const sessionToken = req.cookies.sessionToken;
     console.log(`Session token from cookie: ${sessionToken}`);
 
@@ -36,7 +33,6 @@ async function requireLogin(req, res, next) {
 
         console.log(`Session found: ${JSON.stringify(session[0])}`);
 
-        // Fetch user data including Email
         const [user] = await db.query(
             'SELECT FullName, UserID, Email, EmailVerified, GoogleID, ProfilePicture, Username FROM Users WHERE UserID = ?',
             [session[0].UserID]
@@ -49,25 +45,23 @@ async function requireLogin(req, res, next) {
 
         const userData = user[0];
 
-        // Check if the user is verified (either via Google login or email verification)
         if (!userData.EmailVerified && !userData.GoogleID) {
             console.log('User is authenticated but not verified, redirecting to verify notice');
             return res.redirect('/verify-notice');
         }
 
-        // Attach user info to the request object, including ProfilePicture, Username, and Email
         req.user = {
             UserID: userData.UserID,
             FullName: userData.FullName,
-            Email: userData.Email,  // Added Email field
+            Email: userData.Email, 
             EmailVerified: userData.EmailVerified,
             GoogleID: userData.GoogleID,
-            ProfilePicture: userData.ProfilePicture || '/uploads/profile_pictures/default.png',  // Default if no profile picture
+            ProfilePicture: userData.ProfilePicture || '/uploads/profile_pictures/default.png', 
             Username: userData.Username
         };
 
         console.log(`User authenticated: ${JSON.stringify(req.user)}`);
-        next(); // Proceed to the next middleware or route handler
+        next(); 
     } catch (error) {
         console.error('Authentication Error:', error);
         return res.status(500).send('Internal Server Error');

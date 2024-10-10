@@ -1,4 +1,3 @@
-// middleware/attachUser.js
 
 const db = require('../config/sql');
 
@@ -28,7 +27,6 @@ async function attachUser(req, res, next) {
             }
         } catch (error) {
             console.error('Error in attachUser middleware:', error);
-            // Proceed without attaching user if there's an error
         }
     }
     next();
