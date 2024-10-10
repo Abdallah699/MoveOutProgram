@@ -6,14 +6,13 @@ USE moveOut;
 
 SET GLOBAL local_infile = 1;
 
-LOAD DATA LOCAL INFILE '/home/abdalla/moveOut/MoveOutProject/sql/admin_user.csv'
+LOAD DATA LOCAL INFILE 'admin_user.csv'
 INTO TABLE Users
 FIELDS TERMINATED BY ',' 
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS 
-(Email, PasswordHash, Salt, FullName, GoogleID, Username, ProfilePicture, EmailVerified, VerificationCode, VerificationExpiresAt, IsDeactivated, DeactivationToken, Admin);
+(Email, PasswordHash, Salt, FullName, GoogleID, Username, ProfilePicture, EmailVerified, VerificationCode, VerificationExpiresAt, IsDeactivated, DeactivationToken, AdminLevel);
 
--- Same for other CSV files, adjust paths accordingly
 
 
 LOAD DATA LOCAL INFILE 'Labels.csv'

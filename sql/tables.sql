@@ -25,8 +25,10 @@ CREATE TABLE Users (
     RegisteredAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     IsDeactivated BOOLEAN DEFAULT FALSE,  -- Deactivation status
     DeactivationToken VARCHAR(64) DEFAULT NULL,  -- Token for reactivation or deletion
-    Admin BOOLEAN DEFAULT FALSE  -- New field for identifying admin users
+    AdminLevel TINYINT DEFAULT 0,  -- 0: Regular user, 1: Admin, 2: Super Admin
+    CONSTRAINT uc_Email UNIQUE (Email)
 );
+
 
 -- Create Labels table
 CREATE TABLE Labels (
