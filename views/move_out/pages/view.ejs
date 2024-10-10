@@ -1,29 +1,30 @@
 <%- include("./../partials/header.ejs") %>
 
-<div class="container">
+<div class="container label-details-container">
     <div class="row justify-content-center">
-        <div class="col-md-8 box-wrapper">
-            <h2 class="text-center">Label Details</h2>
+        <div class="col-lg-10 col-md-10 col-sm-12">
+            <div class="text-center mb-4">
+                <h2 class="label-title">Label Details</h2>
+            </div>
 
-            <!-- Label Details -->
-            <p><strong>Label Name:</strong> <%= label.LabelName %></p>
-            <p><strong>Label Option:</strong> <%= label.LabelOption %></p>
-            <p><strong>Label Design:</strong> <%= label.LabelDesign %></p>
-            <p><strong>Label Visibility:</strong> <%= label.Status %></p>
+            <div class="label-info-box">
+                <p class="label-detail"><strong>Label Name:</strong> <%= label.LabelName %></p>
+                <p class="label-detail"><strong>Label Option:</strong> <%= label.LabelOption %></p>
+                <p class="label-detail"><strong>Label Design:</strong> <%= label.LabelDesign %></p>
+                <p class="label-detail"><strong>Label Visibility:</strong> <%= label.Status %></p>
+            </div>
 
-            <!-- Content Carousel -->
             <% if (labelContents && labelContents.length > 0) { %>
                 <div class="form-group">
-                    <label>Content:</label>
-
+                    <label class="content-title"><strong>Content:</strong></label>
                     <div id="contentCarousel" class="carousel slide" data-ride="carousel">
                         <div class="carousel-inner">
                             <% labelContents.forEach((content, index) => { %>
                                 <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
                                     <% if (content.ContentType === 'image') { %>
-                                        <img src="/uploads/<%= content.ContentData %>" class="d-block w-100" alt="Image">
+                                        <img src="/uploads/<%= content.ContentData %>" class="d-block w-100 content-image" alt="Image">
                                     <% } else if (content.ContentType === 'audio') { %>
-                                        <div class="audio-content-carousel">
+                                        <div class="audio-content-carousel text-center">
                                             <audio controls class="w-100">
                                                 <source src="/uploads/<%= content.ContentData %>" type="audio/mpeg">
                                                 Your browser does not support the audio element.
@@ -37,7 +38,6 @@
                                 </div>
                             <% }) %>
                         </div>
-                        <!-- Controls -->
                         <a class="carousel-control-prev" href="#contentCarousel" role="button" data-slide="prev">
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                             <span class="sr-only">Previous</span>
@@ -52,12 +52,17 @@
                 <p class="text-center">No content available for this label.</p>
             <% } %>
 
-            <!-- Buttons -->
-            <div class="text-center mt-4">
+            <div class="action-buttons">
                 <% if (canEdit) { %>
-                    <a href="/labels/edit/<%= label.LabelID %>" class="btn btn-warning">Edit Label</a>
+                    <a href="/labels/edit/<%= label.LabelID %>" class="btn edit-btn">Edit Label</a>
                 <% } %>
-                <a href="/labels" class="btn btn-primary ml-2">Back to Labels</a>
+                <a href="/labels" class="btn back-btn">Back to Labels</a>
+            </div>
+
+            <div class="qr-code-container1 text-center mt-4">
+                <img src="<%= qrCode %>" alt="QR Code for <%= label.LabelName %>" id="qrCode" class="qr-code-image">
+
+                <button class="btn print-btn" onclick="printQRCode()">Print QR Code</button>
             </div>
         </div>
     </div>
@@ -67,9 +72,38 @@
 
 <script>
     $(document).ready(function() {
-        // Disable automatic carousel cycling
         $('#contentCarousel').carousel({
             interval: false
         });
     });
+
+    function printQRCode() {
+        var qrCodeElement = document.getElementById('qrCode');
+        var printWindow = window.open('', '_blank', 'width=400,height=400');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Print QR Code</title>
+                    <style>
+                        body {
+                            text-align: center;
+                            margin: 0;
+                            padding: 10px;
+                        }
+                        img {
+                            max-width: 100%;
+                            height: auto;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <img src="${qrCodeElement.src}" alt="QR Code">
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    }
 </script>

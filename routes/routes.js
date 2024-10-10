@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcrypt");  // <-- Add this line
+const bcrypt = require("bcrypt");
 const {
     registerUser,
     verifyEmail,
@@ -22,11 +22,6 @@ const crypto = require('crypto');
 require('dotenv').config();
 const { sendPasswordResetConfirmation } = require('../src/cli');
 const requireAdmin = require('../middleware/requireAdmin');
-
-
-// Rest of your routes.js code...
-
-
 const passport = require('passport');
 require('../config/passport');
 
@@ -43,11 +38,9 @@ const storage = multer.diskStorage({
     }
 });
 
-
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        // Validate file types
         if (file.fieldname === 'profilePicture' || file.fieldname === 'contentImages') {
             if (!file.mimetype.match(/image\/(jpeg|png|gif|bmp)/)) {
                 return cb(new Error('Only image files are allowed!'), false);
@@ -62,7 +55,6 @@ const upload = multer({
     }
 });
 
-// Email transporter setup
 const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -77,7 +69,6 @@ router.get("/login", (req, res) => {
     res.render("move_out/pages/login.ejs", { title: "Login", message, errorMessage: null });
 });
 
-// Registration route
 router.get("/register", (req, res) => {
     res.render("move_out/pages/register.ejs", { title: "Register", errorMessage: null });
 });
@@ -86,29 +77,20 @@ router.post("/register", async (req, res) => {
     const { email, password, fullName } = req.body;
     const result = await registerUser(email, password, fullName);
 
-    console.log('Register User Result:', result);  // Log registration result
-
     if (result.success) {
-        // Redirect to the verify page after successful registration
-        console.log(`Redirecting to verification for email: ${email}`);  // Log the redirection
         return res.redirect(`/verify?email=${encodeURIComponent(email)}`);
     }
 
-    // Render registration page with error message if failed
     res.status(400).render("move_out/pages/register.ejs", {
         errorMessage: result.message,
         title: "Register"
     });
 });
 
-
-
-
 router.get("/verify", (req, res) => {
     const email = req.query.email;
     res.render("move_out/pages/verify.ejs", { title: "Verify Email", email });
 });
-
 
 router.post("/verify-code", async (req, res) => {
     const { email, verificationCode } = req.body;
@@ -118,7 +100,6 @@ router.post("/verify-code", async (req, res) => {
         return res.redirect(`/login?verified=true`);
     }
 
-    // Re-render the verification page with an error message if failed
     res.status(400).render("move_out/pages/verify.ejs", {
         errorMessage: result.message,
         email,
@@ -126,14 +107,11 @@ router.post("/verify-code", async (req, res) => {
     });
 });
 
-
-
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
     const result = await loginUser(email, password);
 
     if (result.success) {
-        // Create session token and set cookie
         const sessionToken = crypto.randomBytes(32).toString("hex");
         const db = require("../config/sql");
 
@@ -142,18 +120,16 @@ router.post("/login", async (req, res) => {
             [result.userId, sessionToken]
         );
 
-        // Set the session cookie
         res.cookie('sessionToken', sessionToken, { httpOnly: true });
 
-        // Ensure req.user is set for regular users
         req.user = {
             UserID: result.userId,
-            FullName: result.fullName, // Assuming your loginUser function returns fullName
+            FullName: result.fullName,
             EmailVerified: result.emailVerified,
-            GoogleID: null // This is not a Google user
+            GoogleID: null
         };
 
-        return res.redirect("/welcome"); // Redirect to welcome page after login
+        return res.redirect("/welcome");
     }
 
     res.status(400).render("move_out/pages/login.ejs", {
@@ -163,54 +139,30 @@ router.post("/login", async (req, res) => {
     });
 });
 
-
-
-
-
-
-
-
 router.get("/welcome", requireLogin, (req, res) => {
-    res.render("move_out/pages/welcome.ejs", { 
+    res.render("move_out/pages/welcome.ejs", {
         title: "Welcome Page",
-        isAuthenticated: !!req.user,  // Boolean to indicate if user is logged in
-        user: req.user  // The logged-in user's data
+        isAuthenticated: !!req.user,
+        user: req.user
     });
 });
 
-
-router.get("/logout", (req, res) => {
-    // If a session exists, destroy it
-    if (req.session) {
-        req.session.destroy(err => {
-            if (err) {
-                return res.status(500).send("Error logging out.");
-            }
-
-            // Clear the session cookie
-            res.clearCookie("sessionToken"); 
-            return res.redirect("/login"); // Redirect to login page
-        });
-    } else {
-        // If no session exists, simply redirect
-        res.redirect("/login");
-    }
+router.get('/logout', (req, res) => {
+    req.logout(function(err) {
+        if (err) { return next(err); }
+        res.redirect('/login');
+    });
 });
 
-
-// Handle Google OAuth login
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-router.get('/auth/google/callback', 
+router.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login', failureFlash: true }),
-    function(req, res) {
-        // Successful Google login, redirect to welcome page
+    function (req, res) {
         res.redirect('/welcome');
     }
 );
 
-
-// Create label (requires login)
 router.get("/create-label", requireLogin, (req, res) => {
     const labelModelsPath = path.join(__dirname, '../config/labelModels.json');
     const labelModels = JSON.parse(fs.readFileSync(labelModelsPath, 'utf-8'));
@@ -224,7 +176,6 @@ router.get("/create-label", requireLogin, (req, res) => {
     });
 });
 
-// Submit label creation form
 router.post('/create-label/submit', requireLogin, upload.fields([
     { name: 'contentImages', maxCount: 5 },
     { name: 'contentAudio', maxCount: 1 }
@@ -248,7 +199,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
     res.redirect('/labels');
 });
 
-// Display user labels
 router.get('/labels', requireLogin, async (req, res) => {
     const connection = await createConnection();
     const [labels] = await connection.query('SELECT * FROM Labels WHERE UserID = ?', [req.user.UserID]);
@@ -274,7 +224,6 @@ router.get('/labels', requireLogin, async (req, res) => {
     });
 });
 
-
 router.post("/create-label/step2", requireLogin, (req, res) => {
     const { labelDesign, labelName, labelOption, status } = req.body;
 
@@ -283,8 +232,8 @@ router.post("/create-label/step2", requireLogin, (req, res) => {
             errorMessage: "Label name cannot be longer than 10 characters.",
             title: "Create Label",
             labelModels: JSON.parse(fs.readFileSync(path.join(__dirname, '../config/labelModels.json'), 'utf-8')),
-            isAuthenticated: !!req.user, // Explicitly pass isAuthenticated
-            user: req.user // Explicitly pass user object
+            isAuthenticated: !!req.user,
+            user: req.user
         });
     }
 
@@ -295,59 +244,37 @@ router.post("/create-label/step2", requireLogin, (req, res) => {
         status,
         title: "Add Content",
         errorMessage: null,
-        isAuthenticated: !!req.user, // Explicitly pass isAuthenticated
-        user: req.user // Explicitly pass user object
+        isAuthenticated: !!req.user,
+        user: req.user
     });
-});
-
-
-
-
-router.post('/create-label/submit', requireLogin, upload.fields([
-    { name: 'contentImages', maxCount: 5 },
-    { name: 'contentAudio', maxCount: 1 }
-]), async (req, res) => {
-    const { labelDesign, labelName, labelOption, contentType, contentText, status } = req.body;
-    const userId = req.user.UserID;
-
-    let contentData = {};
-
-    if (contentType === 'text') {
-        contentData = { type: 'text', data: contentText };
-    } else if (contentType === 'audio') {
-        const audioFile = req.files['contentAudio'] ? req.files['contentAudio'][0] : null;
-        contentData = { type: 'audio', data: audioFile };
-    } else if (contentType === 'image') {
-        const imageFiles = req.files['contentImages'] || [];
-        contentData = { type: 'image', data: imageFiles };
-    }
-
-    await createLabel(userId, labelDesign, labelName, labelOption, status, contentData);
-    res.redirect('/labels');
 });
 
 router.get('/labels/view/:id', requireLogin, canViewLabel, async (req, res) => {
     const label = req.label;
     const canEdit = req.canEdit;
-    
-    try {
-        const connection = await createConnection();
-        const [labelContents] = await connection.query('SELECT * FROM LabelContents WHERE LabelID = ?', [label.LabelID]);
-        
-        res.render('move_out/pages/view.ejs', {
-            label,
-            labelContents,
-            title: `Viewing Label: ${label.LabelName}`,
-            canEdit,
-            isAuthenticated: !!req.user,
-            user: req.user
-        });
-    } catch (error) {
-        console.error('Error fetching label contents:', error);
-        res.status(500).send('Internal server error.');
-    }
-});
 
+    const connection = await createConnection();
+    const [labelContents] = await connection.query('SELECT * FROM LabelContents WHERE LabelID = ?', [label.LabelID]);
+
+    const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
+    const qrCodeOptions = {
+        color: {
+            dark: '#000000',
+            light: '#0000'
+        }
+    };
+    const qrCode = await QRCode.toDataURL(qrUrl, qrCodeOptions);
+
+    res.render('move_out/pages/view.ejs', {
+        label,
+        labelContents,
+        qrCode,
+        title: `Viewing Label: ${label.LabelName}`,
+        canEdit,
+        isAuthenticated: !!req.user,
+        user: req.user
+    });
+});
 
 router.get('/labels/edit/:id', requireLogin, async (req, res) => {
     const labelId = req.params.id;
@@ -466,8 +393,8 @@ router.get('/leaderboard', requireLogin, async (req, res) => {
     res.render('move_out/pages/leaderboard.ejs', {
         title: 'Leaderboard',
         users,
-        isAuthenticated: !!req.user, // This ensures isAuthenticated is true when user is logged in
-        user: req.user  // Pass the logged-in user information
+        isAuthenticated: !!req.user,
+        user: req.user
     });
 });
 
@@ -487,9 +414,22 @@ router.get('/users/:userId/labels', async (req, res) => {
         [userId]
     );
 
+    const qrCodes = {};
+    for (const label of labels) {
+        const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
+        const qrCodeOptions = {
+            color: {
+                dark: '#000000',
+                light: '#0000'
+            }
+        };
+        qrCodes[label.LabelID] = await QRCode.toDataURL(qrUrl, qrCodeOptions);
+    }
+
     res.render('move_out/pages/user_labels.ejs', {
         title: `${userName}'s Public Labels`,
         labels,
+        qrCodes,
         userName,
         isAuthenticated: req.user ? true : false,
         user: req.user
@@ -510,7 +450,6 @@ router.post('/labels/delete/:id', requireLogin, async (req, res) => {
     const [contentRows] = await connection.query('SELECT * FROM LabelContents WHERE LabelID = ?', [labelId]);
 
     await connection.query('DELETE FROM LabelContents WHERE LabelID = ?', [labelId]);
-
     await connection.query('DELETE FROM Labels WHERE LabelID = ?', [labelId]);
 
     contentRows.forEach(content => {
@@ -527,43 +466,16 @@ router.post('/labels/delete/:id', requireLogin, async (req, res) => {
     res.redirect('/labels');
 });
 
-router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-router.get('/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/login', failureFlash: true }),
-    function(req, res) {
-        console.log('Google authentication successful, user:', req.user); // Log user after Google login
-        res.redirect('/welcome'); // Redirect to a route that requires authentication
-    }
-);
-
-router.get('/logout', (req, res) => {
-    req.logout(function(err) {
-        if (err) { return next(err); }
-        res.redirect('/login');
-    });
-});
-
-router.get('/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/login', failureFlash: true }),
-    function(req, res) {
-        console.log('Google authentication successful, user:', req.user); 
-        res.redirect('/welcome'); 
-    }
-);
-
-// Account Settings
 router.get('/account', requireLogin, (req, res) => {
     res.render('move_out/pages/settings', {
         title: 'Account Settings',
-        user: req.user,  // Make sure the user object is passed
-        isAuthenticated: !!req.user,  // Pass the isAuthenticated flag
+        user: req.user,
+        isAuthenticated: !!req.user,
         successMessage: null,
         errorMessage: null
     });
 });
 
-// Update Account Information
 router.post("/account/update", requireLogin, async (req, res) => {
     const { username, password } = req.body;
     const userId = req.user.UserID;
@@ -575,293 +487,199 @@ router.post("/account/update", requireLogin, async (req, res) => {
         updateFields.PasswordHash = hashedPassword;
     }
 
-    try {
-        const db = require('../config/sql');
-        await db.query('UPDATE Users SET ? WHERE UserID = ?', [updateFields, userId]);
+    const db = require('../config/sql');
+    await db.query('UPDATE Users SET ? WHERE UserID = ?', [updateFields, userId]);
 
-        req.user.Username = username;
+    req.user.Username = username;
 
-        res.redirect('/account');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error updating account");
-    }
+    res.redirect('/account');
 });
 
 router.post('/account/update-picture', requireLogin, upload.single('profilePicture'), async (req, res) => {
     const userId = req.user.UserID;
 
     if (req.file) {
-        console.log("File uploaded: ", req.file); // Log uploaded file details
         const profilePicturePath = '/uploads/profile_pictures/' + req.file.filename;
 
         const db = require('../config/sql');
         await db.query('UPDATE Users SET ProfilePicture = ? WHERE UserID = ?', [profilePicturePath, userId]);
 
-        // Update the profile picture in the session
         req.user.ProfilePicture = profilePicturePath;
-    } else {
-        console.log("No file uploaded.");
     }
 
     res.redirect('/account');
 });
 
-
-
-
 router.post('/account/update-password', requireLogin, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.UserID;
 
-    // Ensure that only non-Google users (with PasswordHash !== '0') can update their password
     if (req.user.PasswordHash === '0') {
         return res.status(403).send("Google OAuth users cannot change their password.");
     }
 
-    try {
-        const db = require('../config/sql');
-        
-        // Fetch the user's current password hash and salt from the database
-        const [user] = await db.query('SELECT PasswordHash, Salt, Email FROM Users WHERE UserID = ?', [userId]);
+    const db = require('../config/sql');
+    const [user] = await db.query('SELECT PasswordHash, Salt, Email FROM Users WHERE UserID = ?', [userId]);
 
-        if (!user.length) {
-            return res.status(404).send("User not found.");
-        }
+    if (!user.length) {
+        return res.status(404).send("User not found.");
+    }
 
-        const userData = user[0];
+    const userData = user[0];
 
-        // Verify if the current password entered matches the stored password hash
-        const isPasswordValid = await bcrypt.compare(currentPassword + userData.Salt, userData.PasswordHash);
-        
-        if (!isPasswordValid) {
-            return res.status(400).render('move_out/pages/settings', {
-                errorMessage: 'Current password is incorrect.',
-                successMessage: null,
-                user: req.user
-            });
-        }
+    const isPasswordValid = await bcrypt.compare(currentPassword + userData.Salt, userData.PasswordHash);
 
-        // Validate the new password (must contain at least one uppercase letter and one number)
-        const passwordRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
-        if (!passwordRegex.test(newPassword)) {
-            return res.status(400).render('move_out/pages/settings', {
-                errorMessage: 'New password must contain at least one uppercase letter and one number.',
-                successMessage: null,
-                user: req.user
-            });
-        }
-
-        // If the current password is correct and the new password is valid, update it
-        const { salt, hashedPassword } = await hashPassword(newPassword);
-
-        // Update the password hash and salt in the database
-        await db.query('UPDATE Users SET PasswordHash = ?, Salt = ? WHERE UserID = ?', [hashedPassword, salt, userId]);
-
-        // Send password reset confirmation email
-        const transporter = nodemailer.createTransport({
-            service: "Gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: userData.Email,  // Send the email to the user
-            subject: "Password Reset Confirmation",
-            text: `Hello ${req.user.FullName},\n\nYour password has been successfully updated. If you didn't make this change, please contact our support team immediately.\n\nThank you,\nThe Alhamad Relocations Team`
-        };
-
-        await transporter.sendMail(mailOptions);
-
-        // Redirect to the settings page with a success message
-        return res.render('move_out/pages/settings', {
-            successMessage: 'Password updated successfully. A confirmation email has been sent to your email address.',
-            errorMessage: null,
+    if (!isPasswordValid) {
+        return res.status(400).render('move_out/pages/settings', {
+            errorMessage: 'Current password is incorrect.',
+            successMessage: null,
             user: req.user
         });
-    } catch (err) {
-        console.error('Error updating password:', err);
-        res.status(500).send("Error updating password");
     }
-});
 
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(400).render('move_out/pages/settings', {
+            errorMessage: 'New password must contain at least one uppercase letter and one number.',
+            successMessage: null,
+            user: req.user
+        });
+    }
+
+    const { salt, hashedPassword } = await hashPassword(newPassword);
+
+    await db.query('UPDATE Users SET PasswordHash = ?, Salt = ? WHERE UserID = ?', [hashedPassword, salt, userId]);
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: userData.Email,
+        subject: "Password Reset Confirmation",
+        text: `Hello ${req.user.FullName},\n\nYour password has been successfully updated. If you didn't make this change, please contact our support team immediately.\n\nThank you,\nThe Alhamad Relocations Team`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return res.render('move_out/pages/settings', {
+        successMessage: 'Password updated successfully. A confirmation email has been sent to your email address.',
+        errorMessage: null,
+        user: req.user
+    });
+});
 
 router.post('/account/deactivate', requireLogin, async (req, res) => {
     const userId = req.user.UserID;
-    const email = req.user.Email;  // Assuming the email is available in the user object
+    const email = req.user.Email;
     const fullName = req.user.FullName;
 
-    try {
-        const db = require('../config/sql');
+    const db = require('../config/sql');
 
-        // Generate a unique token for reactivation/deletion links
-        const token = crypto.randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString('hex');
 
-        // Set the user's account as deactivated and store the token in the database
-        await db.query('UPDATE Users SET IsDeactivated = TRUE, DeactivationToken = ? WHERE UserID = ?', [token, userId]);
+    await db.query('UPDATE Users SET IsDeactivated = TRUE, DeactivationToken = ? WHERE UserID = ?', [token, userId]);
 
-        // Log the user out after deactivation with a callback function to handle potential errors
-        req.logout(function (err) {
-            if (err) {
-                console.error('Error logging out after deactivation:', err);
-                return res.status(500).send('Error logging out. Please try again.');
+    req.logout(function (err) {
+        if (err) {
+            return res.status(500).send('Error logging out. Please try again.');
+        }
+
+        const reactivateLink = `http://localhost:1339/account/reactivate/${token}`;
+        const deleteLink = `http://localhost:1339/account/delete/${token}`;
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Account Deactivated",
+            text: `Hello ${fullName},\n\nYour account has been deactivated. If you did not initiate this, you have two options:\n\n1. Reactivate your account: ${reactivateLink}\n2. Delete your account: ${deleteLink}\n\nIf you don't respond, your account will remain deactivated. Thank you.\n\nThe Alhamad Relocations Team`
+        };
+
+        transporter.sendMail(mailOptions, function (error) {
+            if (error) {
+                return res.status(500).send('Error sending deactivation email.');
             }
 
-            // Send email with reactivation and deletion links
-            const transporter = nodemailer.createTransport({
-                service: "Gmail",
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
-
-            const reactivateLink = `http://localhost:1339/account/reactivate/${token}`;
-            const deleteLink = `http://localhost:1339/account/delete/${token}`;
-
-            const mailOptions = {
-                from: process.env.EMAIL_USER,
-                to: email,  // Send the email to the user's email
-                subject: "Account Deactivated",
-                text: `Hello ${fullName},\n\nYour account has been deactivated. If you did not initiate this, you have two options:\n\n1. Reactivate your account: ${reactivateLink}\n2. Delete your account: ${deleteLink}\n\nIf you don't respond, your account will remain deactivated. Thank you.\n\nThe Alhamad Relocations Team`
-            };
-
-            transporter.sendMail(mailOptions, function (error) {
-                if (error) {
-                    console.error('Error sending deactivation email:', error);
-                    return res.status(500).send('Error sending deactivation email.');
-                }
-
-                return res.redirect('/login');  // Redirect to login after successful deactivation and email sent
-            });
+            return res.redirect('/login');
         });
-
-    } catch (err) {
-        console.error('Error deactivating account:', err);
-        res.status(500).send('Error deactivating account');
-    }
+    });
 });
-
 
 router.get('/account/reactivate/:token', async (req, res) => {
     const token = req.params.token;
 
-    try {
-        const db = require('../config/sql');
+    const db = require('../config/sql');
 
-        // Check if the token is valid and if the user is deactivated
-        const [user] = await db.query('SELECT UserID, Email, FullName FROM Users WHERE DeactivationToken = ? AND IsDeactivated = TRUE', [token]);
+    const [user] = await db.query('SELECT UserID, Email, FullName FROM Users WHERE DeactivationToken = ? AND IsDeactivated = TRUE', [token]);
 
-        if (!user.length) {
-            return res.status(400).send('Invalid or expired reactivation token.');
-        }
-
-        const userData = user[0];
-
-        // Reactivate the user's account
-        await db.query('UPDATE Users SET IsDeactivated = FALSE, DeactivationToken = NULL WHERE UserID = ?', [userData.UserID]);
-
-        return res.send(`Hello ${userData.FullName}, your account has been successfully reactivated. You can now log in.`);
-    } catch (err) {
-        console.error('Error reactivating account:', err);
-        res.status(500).send('Error reactivating account');
+    if (!user.length) {
+        return res.status(400).send('Invalid or expired reactivation token.');
     }
+
+    const userData = user[0];
+
+    await db.query('UPDATE Users SET IsDeactivated = FALSE, DeactivationToken = NULL WHERE UserID = ?', [userData.UserID]);
+
+    return res.send(`Hello ${userData.FullName}, your account has been successfully reactivated. You can now log in.`);
 });
-
-
-
 
 router.get('/account/delete/:token', async (req, res) => {
     const token = req.params.token;
 
-    try {
-        const db = require('../config/sql');
+    const db = require('../config/sql');
 
-        // Check if the token is valid and if the user is deactivated
-        const [user] = await db.query('SELECT UserID, FullName FROM Users WHERE DeactivationToken = ? AND IsDeactivated = TRUE', [token]);
+    const [user] = await db.query('SELECT UserID, FullName FROM Users WHERE DeactivationToken = ? AND IsDeactivated = TRUE', [token]);
 
-        if (!user.length) {
-            return res.status(400).send('Invalid or expired deletion token.');
-        }
-
-        const userData = user[0];
-
-        // Delete the user's account
-        await db.query('DELETE FROM Users WHERE UserID = ?', [userData.UserID]);
-
-        return res.send(`Goodbye ${userData.FullName}, your account has been permanently deleted.`);
-    } catch (err) {
-        console.error('Error deleting account:', err);
-        res.status(500).send('Error deleting account');
+    if (!user.length) {
+        return res.status(400).send('Invalid or expired deletion token.');
     }
-});
 
+    const userData = user[0];
+
+    await db.query('DELETE FROM Users WHERE UserID = ?', [userData.UserID]);
+
+    return res.send(`Goodbye ${userData.FullName}, your account has been permanently deleted.`);
+});
 
 router.get('/admin/dashboard', requireLogin, requireAdmin, async (req, res) => {
     const db = require('../config/sql');
 
-    try {
-        const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, Admin, IsDeactivated FROM Users');
+    const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, Admin, IsDeactivated FROM Users');
 
-        res.render('admin/dashboard', {
-            title: 'Admin Dashboard',
-            users,
-            isAuthenticated: !!req.user,
-            user: req.user
-        });
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).send('Error fetching users');
-    }
+    res.render('admin/dashboard', {
+        title: 'Admin Dashboard',
+        users,
+        isAuthenticated: !!req.user,
+        user: req.user
+    });
 });
-
 
 router.get('/admin/users', requireLogin, requireAdmin, async (req, res) => {
     const db = require('../config/sql');
 
-    try {
-        const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, Admin, IsDeactivated FROM Users');
+    const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, Admin, IsDeactivated FROM Users');
 
-        res.render('admin/users', {
-            title: 'All Users',
-            users,
-            isAuthenticated: !!req.user,
-            user: req.user
-        });
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).send('Error fetching users');
-    }
+    res.render('admin/users', {
+        title: 'All Users',
+        users,
+        isAuthenticated: !!req.user,
+        user: req.user
+    });
 });
-
 
 router.post('/admin/users/:id/toggle-activation', requireLogin, requireAdmin, async (req, res) => {
     const userId = req.params.id;
     const db = require('../config/sql');
 
-    try {
-        // Fetch user details
-        const [user] = await db.query('SELECT IsDeactivated FROM Users WHERE UserID = ?', [userId]);
+    const [user] = await db.query('SELECT IsDeactivated FROM Users WHERE UserID = ?', [userId]);
 
-        if (!user.length) {
-            return res.status(404).send('User not found.');
-        }
-
-        const newStatus = !user[0].IsDeactivated;
-
-        // Toggle activation status
-        await db.query('UPDATE Users SET IsDeactivated = ? WHERE UserID = ?', [newStatus, userId]);
-
-        res.redirect('/admin/users');
-    } catch (error) {
-        console.error('Error toggling activation:', error);
-        res.status(500).send('Error toggling activation');
+    if (!user.length) {
+        return res.status(404).send('User not found.');
     }
-});
 
+    const newStatus = !user[0].IsDeactivated;
+
+    await db.query('UPDATE Users SET IsDeactivated = ? WHERE UserID = ?', [newStatus, userId]);
+
+    res.redirect('/admin/users');
+});
 
 router.get('/admin/send-email', requireLogin, requireAdmin, (req, res) => {
     res.render('admin/send-email', {
@@ -871,57 +689,24 @@ router.get('/admin/send-email', requireLogin, requireAdmin, (req, res) => {
     });
 });
 
-
 router.post('/admin/send-email', requireLogin, requireAdmin, async (req, res) => {
     const { subject, message } = req.body;
     const db = require('../config/sql');
-    const nodemailer = require('nodemailer');
 
-    try {
-        // Fetch all users' emails
-        const [users] = await db.query('SELECT Email FROM Users WHERE IsDeactivated = FALSE');
+    const [users] = await db.query('SELECT Email FROM Users WHERE IsDeactivated = FALSE');
 
-        // Set up email transporter
-        const transporter = nodemailer.createTransport({
-            service: 'Gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
+    for (const user of users) {
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.Email,
+            subject: subject,
+            text: message
+        };
 
-        // Send email to each user
-        for (const user of users) {
-            const mailOptions = {
-                from: process.env.EMAIL_USER,
-                to: user.Email,
-                subject: subject,
-                text: message
-            };
-
-            await transporter.sendMail(mailOptions);
-        }
-
-        res.redirect('/admin/users');
-    } catch (error) {
-        console.error('Error sending email:', error);
-        res.status(500).send('Error sending email');
+        await transporter.sendMail(mailOptions);
     }
+
+    res.redirect('/admin/users');
 });
-
-// Example of calling it in your routes.js
-const { generateHashedPassword } = require('../src/cli');
-
-// Generate hashed password for admin
-generateHashedPassword('Hello1')
-.then(hash => {
-    console.log('Use this hashed password in your database:', hash);
-    // You can also update the database directly here if needed
-})
-.catch(err => console.error(err));
-
-
-
-
 
 module.exports = router;

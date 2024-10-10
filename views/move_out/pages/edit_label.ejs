@@ -12,13 +12,11 @@
             <% } %>
 
             <form action="/labels/edit/<%= label.LabelID %>" method="post" enctype="multipart/form-data">
-                <!-- Label Name -->
                 <div class="form-group">
                     <label for="labelName">Label Name:</label>
                     <input type="text" class="form-control" id="labelName" name="labelName" value="<%= label.LabelName %>" required>
                 </div>
 
-                <!-- Label Option -->
                 <div class="form-group">
                     <label for="labelOption">Label Option:</label>
                     <select class="form-control" id="labelOption" name="labelOption">
@@ -28,7 +26,6 @@
                     </select>
                 </div>
 
-                <!-- Label Visibility -->
                 <div class="form-group">
                     <label>Label Visibility:</label><br>
                     <div class="form-check form-check-inline">
@@ -41,7 +38,6 @@
                     </div>
                 </div>
 
-                <!-- Existing Content Carousel -->
                 <% if (labelContents && labelContents.length > 0) { %>
                     <div class="form-group">
                         <label>Existing Content:</label>
@@ -64,14 +60,12 @@
                                                 <p class="carousel-text"><%= content.ContentData %></p>
                                             </div>
                                         <% } %>
-                                        <!-- Centered Delete Button -->
                                         <button type="button" class="btn btn-danger btn-sm delete-button" data-content-id="<%= content.ContentID %>">
                                             <i class="fa fa-trash"></i> Delete
                                         </button>
                                     </div>
                                 <% }) %>
                             </div>
-                            <!-- Controls -->
                             <a class="carousel-control-prev" href="#contentCarousel" role="button" data-slide="prev">
                                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                 <span class="sr-only">Previous</span>
@@ -84,10 +78,8 @@
                     </div>
                 <% } %>
 
-                <!-- Hidden inputs for removed content IDs -->
                 <div id="removedContentInputs"></div>
 
-                <!-- Add New Content -->
                 <div class="form-group">
                     <label for="contentType">Add New Content:</label>
                     <select class="form-control" id="contentType" name="contentType">
@@ -98,25 +90,21 @@
                     </select>
                 </div>
 
-                <!-- Text Content Input -->
                 <div class="form-group" id="textContent" style="display: none;">
                     <label for="contentText">Text Content:</label>
                     <textarea class="form-control" id="contentText" name="contentText"></textarea>
                 </div>
 
-                <!-- Image Content Input -->
                 <div class="form-group" id="imageContent" style="display: none;">
                     <label for="contentImages">Upload Images:</label>
                     <input type="file" class="form-control-file" id="contentImages" name="contentImages" accept="image/*" multiple>
                 </div>
 
-                <!-- Audio Content Input -->
                 <div class="form-group" id="audioContent" style="display: none;">
                     <label for="contentAudio">Upload Audio:</label>
                     <input type="file" class="form-control-file" id="contentAudio" name="contentAudio" accept="audio/*">
                 </div>
 
-                <!-- Submit Button -->
                 <button type="submit" class="btn btn-primary">Update Label</button>
             </form>
         </div>
@@ -127,12 +115,10 @@
 
 <script>
     $(document).ready(function() {
-        // Disable automatic carousel cycling
         $('#contentCarousel').carousel({
             interval: false
         });
 
-        // Show/hide content input fields based on selected content type
         document.getElementById('contentType').addEventListener('change', function() {
             var contentType = this.value;
             document.getElementById('textContent').style.display = contentType === 'text' ? 'block' : 'none';
@@ -140,10 +126,8 @@
             document.getElementById('audioContent').style.display = contentType === 'audio' ? 'block' : 'none';
         });
 
-        // Handle delete button clicks
         $('.delete-button').on('click', function() {
             var contentId = $(this).data('content-id');
-            // Add a hidden input to the form
             $('#removedContentInputs').append(
                 $('<input>').attr({
                     type: 'hidden',
@@ -151,22 +135,18 @@
                     value: contentId
                 })
             );
-            // Remove the carousel item
             var carouselItem = $(this).closest('.carousel-item');
             var isActive = carouselItem.hasClass('active');
             carouselItem.remove();
 
-            // If the removed item was active, set the next item as active
             if (isActive) {
                 $('#contentCarousel .carousel-item').first().addClass('active');
             }
 
-            // Re-initialize the carousel to update items
             $('#contentCarousel').carousel('dispose').carousel({
                 interval: false
             });
 
-            // If no items left, hide the carousel controls
             if ($('#contentCarousel .carousel-item').length === 0) {
                 $('#contentCarousel').hide();
             }
