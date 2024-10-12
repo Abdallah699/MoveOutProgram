@@ -29,7 +29,6 @@ CREATE TABLE Users (
     CONSTRAINT uc_Email UNIQUE (Email)
 );
 
-
 -- Create Labels table
 CREATE TABLE Labels (
     LabelID INT AUTO_INCREMENT PRIMARY KEY,
@@ -111,13 +110,15 @@ CREATE TABLE QRScans (
     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
 );
 
--- Create SharedLabels table
+-- Create SharedLabels table with RecipientUserID
 CREATE TABLE SharedLabels (
     ShareID INT PRIMARY KEY AUTO_INCREMENT,
     LabelID INT NOT NULL,
     ShareToken VARCHAR(255) UNIQUE NOT NULL,
     RecipientEmail VARCHAR(255) NOT NULL,
+    RecipientUserID INT,  -- Adding the RecipientUserID column to track the user
     SharedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ExpiresAt TIMESTAMP NULL,
-    FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
+    FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE,
+    FOREIGN KEY (RecipientUserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );

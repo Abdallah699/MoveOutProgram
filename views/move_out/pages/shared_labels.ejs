@@ -1,0 +1,50 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container my-labels-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-md-10 col-sm-12">
+            <div class="text-center mb-4">
+                <h2 class="my-labels-title">Shared Labels</h2>
+            </div>
+
+            <div class="label-cards-wrapper">
+                <div class="row">
+                    <% if (sharedLabels.length > 0) { %>
+                        <% sharedLabels.forEach(function(label) { %>
+                            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                                <div class="card text-center label-card">
+                                    <div class="card-body p-0">
+                                        <div class="label-image-container position-relative">
+                                            <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
+
+                                            <div class="label-overlay">
+                                                <h5 class="label-name"><%= label.LabelName %></h5>
+                                                <p class="label-type">
+                                                    <%= label.LabelOption %> | Shared by <%= label.SharedBy %>
+                                                </p>
+                                            </div>
+
+                                            <div class="label-hover-overlay">
+                                                <div class="btn-group-vertical">
+                                                    <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
+                                                </div>
+                                            </div>
+
+                                            <div class="qr-code-container">
+                                                <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p class="text-center">No labels have been shared with you yet.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>

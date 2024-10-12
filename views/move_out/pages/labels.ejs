@@ -1,53 +1,58 @@
 <%- include("./../partials/header.ejs") %>
 
-<div class="container header-spacing">
+<div class="container my-labels-container">
     <div class="row justify-content-center">
-        <div class="col-md-10 box-wrapper">
-            <h2 class="text-center">My Labels</h2>
+        <div class="col-lg-10 col-md-10 col-sm-12">
             <div class="text-center mb-4">
-                <a href="/create-label" class="btn btn-primary">Create New Label</a>
+                <h2 class="my-labels-title">My Labels</h2>
             </div>
 
-            <div class="row">
-                <% if (labels.length > 0) { %>
-                    <% labels.forEach(function(label) { %>
-                        <div class="col-md-4 mb-4">
-                            <div class="card text-center label-card">
-                                <div class="card-body p-0">
-                                    <div class="label-image-container position-relative">
-                                        <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
+            <div class="action-buttons text-center mb-4">
+                <a href="/create-label" class="btn create-label-btn">Create New Label</a>
+            </div>
 
-                                        <div class="label-overlay">
-                                            <h5 class="label-name"><%= label.LabelName %></h5>
-                                            <p class="label-type">
-                                                <%= label.LabelOption %> | <%= label.Status ? (label.Status.charAt(0).toUpperCase() + label.Status.slice(1)) : 'Private' %>
-                                            </p>
-                                        </div>
+            <div class="label-cards-wrapper">
+                <div class="row">
+                    <% if (labels.length > 0) { %>
+                        <% labels.forEach(function(label) { %>
+                            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                                <div class="card text-center label-card">
+                                    <div class="card-body p-0">
+                                        <div class="label-image-container position-relative">
+                                            <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
 
-                                        <div class="label-hover-overlay">
-                                            <div class="btn-group-vertical">
-                                                <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
-                                                <a href="/labels/edit/<%= label.LabelID %>" class="btn btn-warning">Edit</a>
-                                                <form action="/labels/delete/<%= label.LabelID %>" method="POST" style="display:inline;" class="delete-form">
-                                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                                </form>
-                                                <% if (label.Status === 'private') { %>
-                                                    <button type="button" class="btn btn-info share-button" data-label-id="<%= label.LabelID %>" data-label-name="<%= label.LabelName %>">Share</button>
-                                                <% } %>
+                                            <div class="label-overlay">
+                                                <h5 class="label-name"><%= label.LabelName %></h5>
+                                                <p class="label-type">
+                                                    <%= label.LabelOption %> | <%= label.Status ? (label.Status.charAt(0).toUpperCase() + label.Status.slice(1)) : 'Private' %>
+                                                </p>
                                             </div>
-                                        </div>
 
-                                        <div class="qr-code-container" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: none;">
-                                            <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image" style="max-width: 100px; background-color: transparent !important; border: none;">
+                                            <div class="label-hover-overlay">
+                                                <div class="btn-group-vertical">
+                                                    <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
+                                                    <a href="/labels/edit/<%= label.LabelID %>" class="btn btn-warning">Edit</a>
+                                                    <form action="/labels/delete/<%= label.LabelID %>" method="POST" style="display:inline;" class="delete-form">
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                    <% if (label.Status === 'public') { %>
+                                                        <button type="button" class="btn btn-info share-button" data-label-id="<%= label.LabelID %>" data-label-name="<%= label.LabelName %>">Share</button>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+
+                                            <div class="qr-code-container">
+                                                <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <p class="text-center">No labels found. Create your first label!</p>
-                <% } %>
+                        <% }); %>
+                    <% } else { %>
+                        <p class="text-center">No labels found. Create your first label!</p>
+                    <% } %>
+                </div>
             </div>
         </div>
     </div>
@@ -60,20 +65,26 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="shareModalLabel">Share Label</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="outline: none; border: none;">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>Enter the email address of the person you want to share the label with:</p>
+                    <p>Select the user you want to share the label with:</p>
                     <div class="form-group">
-                        <label for="recipientEmail">Recipient Email:</label>
-                        <input type="email" class="form-control" id="recipientEmail" name="recipientEmail" required>
+                        <label for="recipientEmail">Recipient Username:</label>
+                        <select class="form-control" id="recipientEmail" name="recipientEmail" required>
+                            <% users.forEach(function(userItem) { %>
+                                <% if (userItem.UserID !== user.UserID) { %>
+                                    <option value="<%= userItem.Email %>"><%= userItem.FullName %> - <%= userItem.Email %></option>
+                                <% } %>
+                            <% }); %>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">Share Label</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" style="outline: none; border: none;">Cancel</button>
                 </div>
             </div>
         </form>
@@ -85,12 +96,12 @@
 <script>
     function validateAndSubmit(form) {
         var recipientEmail = $('#recipientEmail').val();
-        if (!recipientEmail) {
-            alert('Please enter a recipient email.');
-            return false;
+        if (!recipientEmail || recipientEmail.trim() === "") {
+            alert('Please select a recipient.');
+            return false; // Prevent form submission
         }
-        console.log('Submitting form for sharing label...');
-        return true;
+        console.log('Submitting form for sharing label with:', recipientEmail);
+        return true; // Proceed to submit the form
     }
 
     $(document).ready(function() {

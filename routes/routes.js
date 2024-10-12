@@ -201,28 +201,67 @@ router.post('/create-label/submit', requireLogin, upload.fields([
 
 router.get('/labels', requireLogin, async (req, res) => {
     const connection = await createConnection();
-    const [labels] = await connection.query('SELECT * FROM Labels WHERE UserID = ?', [req.user.UserID]);
 
-    const qrCodes = {};
-    for (const label of labels) {
-        const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
-        const qrCodeOptions = {
-            color: {
-                dark: '#000000',
-                light: '#0000'
-            }
-        };
-        qrCodes[label.LabelID] = await QRCode.toDataURL(qrUrl, qrCodeOptions);
+    try {
+        // Fetch labels belonging to the current user
+        const [labels] = await connection.query('SELECT * FROM Labels WHERE UserID = ?', [req.user.UserID]);
+        console.log("Fetched labels:", labels);
+
+        // Generate QR codes for each label
+        const qrCodes = {};
+        for (const label of labels) {
+            const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
+            const qrCodeOptions = {
+                color: {
+                    dark: '#000000',
+                    light: '#0000'
+                }
+            };
+            qrCodes[label.LabelID] = await QRCode.toDataURL(qrUrl, qrCodeOptions);
+        }
+        console.log("Generated QR Codes:", qrCodes);
+
+        // Fetch all users for the phone book (excluding the current user)
+        const [users] = await connection.query('SELECT UserID, FullName, Email FROM Users WHERE UserID != ?', [req.user.UserID]);
+        console.log("Fetched users:", users);
+
+        // Check if the users array is actually fetched and exists
+        if (!users || users.length === 0) {
+            console.warn("No users found other than the current user.");
+        }
+
+        // Log all variables being sent to the template
+        console.log("Sending data to template: ", {
+            labels,
+            qrCodes,
+            title: 'My Labels',
+            isAuthenticated: true,
+            user: req.user,
+            users // Check if this is defined properly before rendering
+        });
+
+        // Pass labels, users, and other necessary data to the template
+        res.render('move_out/pages/labels.ejs', {
+            labels,
+            qrCodes,
+            title: 'My Labels',
+            isAuthenticated: true,
+            user: req.user,
+            users // Pass the users array to the template
+        });
+    } catch (error) {
+        console.error('Error fetching labels or users:', error);
+        res.status(500).send('Error fetching labels or users.');
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
     }
-
-    res.render('move_out/pages/labels.ejs', {
-        labels,
-        qrCodes,
-        title: 'My Labels',
-        isAuthenticated: true,
-        user: req.user
-    });
 });
+
+
+
+
 
 router.post("/create-label/step2", requireLogin, (req, res) => {
     const { labelDesign, labelName, labelOption, status } = req.body;
@@ -345,8 +384,6 @@ router.post('/labels/edit/:id', requireLogin, upload.fields([
     res.redirect('/labels');
 });
 
-// ... [Other code in routes.js] ...
-
 router.post('/labels/share/:id', requireLogin, async (req, res) => {
     console.log('Received POST /labels/share/:id');
     console.log('req.params:', req.params);
@@ -368,35 +405,37 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
     const trimmedRecipientEmail = recipientEmail.trim();
     console.log('Trimmed recipientEmail:', trimmedRecipientEmail);
 
-    console.log('Sharing label with recipient:', trimmedRecipientEmail);
-
     const connection = await createConnection();
     try {
         const [labelRows] = await connection.query('SELECT * FROM Labels WHERE LabelID = ? AND UserID = ?', [labelId, userId]);
-
         if (labelRows.length === 0) {
             console.log('Label not found or user does not have permission.');
             return res.status(403).send('You do not have permission to share this label.');
         }
 
-        // Check if the recipient is the same as the owner
-        if (trimmedRecipientEmail === req.user.Email) {
-            console.log('Recipient is the same as the owner.');
-            return res.status(400).send('You cannot share the label with yourself.');
+        // Find the recipient user by email
+        const [recipientRows] = await connection.query('SELECT UserID, FullName FROM Users WHERE Email = ?', [trimmedRecipientEmail]);
+        if (recipientRows.length === 0) {
+            console.log('Recipient user not found.');
+            return res.status(404).send('Recipient user not found.');
         }
 
+        const recipientUserId = recipientRows[0].UserID;
+        console.log('Recipient UserID:', recipientUserId);
+
+        // Generate a unique share token
         const shareToken = crypto.randomBytes(16).toString('hex');
         console.log('Generated share token:', shareToken);
 
+        // Insert into SharedLabels table
         await connection.query(
-            'INSERT INTO SharedLabels (LabelID, ShareToken, RecipientEmail) VALUES (?, ?, ?)',
-            [labelId, shareToken, trimmedRecipientEmail]
+            'INSERT INTO SharedLabels (LabelID, ShareToken, RecipientEmail, RecipientUserID) VALUES (?, ?, ?, ?)',
+            [labelId, shareToken, trimmedRecipientEmail, recipientUserId]
         );
         console.log('SharedLabels insert success');
 
+        // Send an email notification to the recipient
         const shareLink = `http://localhost:1339/labels/view/${labelId}?token=${shareToken}`;
-        console.log('Share link:', shareLink);
-
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: trimmedRecipientEmail,
@@ -404,14 +443,13 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
             text: `A label has been shared with you by ${req.user.FullName}. Click the link below to view it:\n\n${shareLink}`
         };
 
-        // Send the email
         console.log('Attempting to send email with options:', JSON.stringify(mailOptions, null, 2));
         try {
             const info = await transporter.sendMail(mailOptions);
             console.log('Email sent successfully. Response:', JSON.stringify(info, null, 2));
         } catch (emailError) {
             console.error('Error sending email:', emailError);
-            throw emailError; // Re-throw to be caught by the outer try-catch
+            throw emailError;
         }
 
         return res.redirect('/labels');
@@ -428,33 +466,92 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
     }
 });
 
-// ... [Rest of your routes] ...
 
 
 
 
-
-
-
-router.get('/leaderboard', requireLogin, async (req, res) => {
+router.get('/shared-labels', requireLogin, async (req, res) => {
+    const userId = req.user.UserID;
     const connection = await createConnection();
-    const query = `
-        SELECT Users.UserID, Users.FullName, COUNT(Labels.LabelID) AS LabelCount
-        FROM Users
-        LEFT JOIN Labels ON Users.UserID = Labels.UserID AND Labels.Status = 'public'
-        GROUP BY Users.UserID
-        ORDER BY LabelCount DESC
-    `;
 
-    const [users] = await connection.query(query);
+    try {
+        // Fetch labels shared with the logged-in user
+        const [sharedLabels] = await connection.query(`
+            SELECT sl.LabelID, l.LabelName, l.LabelDesign, l.LabelOption, l.Status, u.FullName AS SharedBy
+            FROM SharedLabels sl
+            JOIN Labels l ON sl.LabelID = l.LabelID
+            JOIN Users u ON l.UserID = u.UserID
+            WHERE sl.RecipientUserID = ?
+        `, [userId]);
 
-    res.render('move_out/pages/leaderboard.ejs', {
-        title: 'Leaderboard',
-        users,
-        isAuthenticated: !!req.user,
-        user: req.user
-    });
+        console.log('Fetched shared labels:', sharedLabels);
+
+        // Generate QR codes for each shared label
+        const qrCodes = {};
+        for (const label of sharedLabels) {
+            const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
+            const qrCodeOptions = {
+                color: {
+                    dark: '#000000',
+                    light: '#0000'
+                }
+            };
+            qrCodes[label.LabelID] = await QRCode.toDataURL(qrUrl, qrCodeOptions);
+        }
+
+        res.render('move_out/pages/shared_labels.ejs', {
+            title: 'Shared Labels',
+            sharedLabels,
+            qrCodes, // Pass generated QR codes to the template
+            isAuthenticated: true,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Error fetching shared labels:', error);
+        res.status(500).send('Error fetching shared labels.');
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
+    }
 });
+
+
+
+
+router.get('/phonebook', requireLogin, async (req, res) => {
+    const searchQuery = req.query.search || '';
+
+    const connection = await createConnection();
+    try {
+        let usersQuery = 'SELECT UserID, FullName, Email, ProfilePicture FROM Users';
+        let queryParams = [];
+
+        if (searchQuery) {
+            usersQuery += ' WHERE FullName LIKE ? OR Email LIKE ?';
+            queryParams.push(`%${searchQuery}%`, `%${searchQuery}%`);
+        }
+
+        const [users] = await connection.query(usersQuery, queryParams);
+
+        res.render('move_out/pages/phonebook.ejs', {
+            title: 'Phone Book',
+            users,
+            searchQuery,
+            isAuthenticated: true,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send('Error fetching users.');
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
+    }
+});
+
+
 
 router.get('/users/:userId/labels', async (req, res) => {
     const userId = req.params.userId;

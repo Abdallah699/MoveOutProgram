@@ -1,76 +1,73 @@
 <%- include("./../partials/header.ejs") %>
 
-<div class="container">
+<div class="container add-label-content-container">
     <div class="row justify-content-center">
-        <div class="col-md-8 box-wrapper" style="border: 2px solid #007BFF; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
-            <h2 class="text-center">Add Contents to Your Label</h2>
-            
-            <p class="text-center">Choose one option to describe your label contents.</p>
+        <div class="col-lg-8 col-md-10 col-sm-12">
+            <div class="text-center mb-4">
+                <h2 class="add-label-title">Add Contents to Your Label</h2>
+                <p class="text-center add-label-description">Choose one option to describe your label contents.</p>
+            </div>
 
             <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
-                <div class="alert alert-danger">
+                <div class="alert alert-danger text-center">
                     <p><%= errorMessage %></p>
                 </div>
             <% } %>
 
-            <form action="/create-label/submit" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="labelDesign" value="<%= labelDesign %>">
-                <input type="hidden" name="labelName" value="<%= labelName %>">
-                <input type="hidden" name="labelOption" value="<%= labelOption %>">
-                <input type="hidden" name="status" value="<%= status %>">
+            <div class="label-content-box-wrapper">
+                <form action="/create-label/submit" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="labelDesign" value="<%= labelDesign %>">
+                    <input type="hidden" name="labelName" value="<%= labelName %>">
+                    <input type="hidden" name="labelOption" value="<%= labelOption %>">
+                    <input type="hidden" name="status" value="<%= status %>">
 
-                <div class="form-group">
-                    <label for="contentType">Choose content type:</label>
-                    <div class="btn-group-toggle">
-                        <label class="btn btn-outline-primary content-type-btn">
-                            <input type="radio" name="contentType" value="text" id="contentTextOption" autocomplete="off" required> Text Description
-                        </label>
-                        <label class="btn btn-outline-primary content-type-btn">
-                            <input type="radio" name="contentType" value="audio" id="contentAudioOption" autocomplete="off"> Upload Audio
-                        </label>
-                        <label class="btn btn-outline-primary content-type-btn">
-                            <input type="radio" name="contentType" value="image" id="contentImageOption" autocomplete="off"> Upload Images
-                        </label>
-                    </div>
-                </div>
-
-                <div id="contentTextInput" class="content-input" style="display: none;">
                     <div class="form-group">
-                        <label for="contentText">Text Description:</label>
-                        <textarea class="form-control" name="contentText" id="contentText" rows="4" placeholder="Enter a description of the label contents"></textarea>
+                        <label class="label-form-label"><strong>Choose content type:</strong></label>
+                        <div class="btn-group-toggle">
+                            <label class="btn btn-outline-primary content-type-btn">
+                                <input type="radio" name="contentType" value="text" id="contentTextOption" autocomplete="off" required> Text Description
+                            </label>
+                            <label class="btn btn-outline-primary content-type-btn">
+                                <input type="radio" name="contentType" value="audio" id="contentAudioOption" autocomplete="off"> Upload Audio
+                            </label>
+                            <label class="btn btn-outline-primary content-type-btn">
+                                <input type="radio" name="contentType" value="image" id="contentImageOption" autocomplete="off"> Upload Images
+                            </label>
+                        </div>
                     </div>
-                </div>
 
-                <div id="contentAudioInput" class="content-input" style="display: none;">
-                    <div class="form-group">
-                        <label for="contentAudio">Upload Audio File:</label>
-                        <input type="file" class="form-control-file" name="contentAudio" accept="audio/*">
+                    <div id="contentTextInput" class="content-input" style="display: none;">
+                        <div class="form-group">
+                            <label for="contentText" class="label-form-label"><strong>Text Description:</strong></label>
+                            <textarea class="form-control form-control-lg" name="contentText" id="contentText" rows="4" placeholder="Enter a description of the label contents"></textarea>
+                        </div>
                     </div>
-                </div>
 
-                <div id="contentImageInput" class="content-input" style="display: none;">
-                    <div class="form-group">
-                        <label for="contentImages">Upload Images:</label>
-                        <input type="file" class="form-control-file" name="contentImages" id="contentImages" multiple accept="image/*">
+                    <div id="contentAudioInput" class="content-input" style="display: none;">
+                        <div class="form-group">
+                            <label for="contentAudio" class="label-form-label"><strong>Upload Audio File:</strong></label>
+                            <input type="file" class="form-control-file" name="contentAudio" accept="audio/*">
+                        </div>
                     </div>
-                    <div id="imagePreview" style="display: flex; flex-wrap: wrap;"></div>
-                </div>
 
-                <div class="text-center">
-                    <button type="submit" class="btn btn-primary">Submit Label</button>
-                </div>
-            </form>
+                    <div id="contentImageInput" class="content-input" style="display: none;">
+                        <div class="form-group">
+                            <label for="contentImages" class="label-form-label"><strong>Upload Images:</strong></label>
+                            <input type="file" class="form-control-file" name="contentImages" id="contentImages" multiple accept="image/*">
+                        </div>
+                        <div id="imagePreview" class="image-preview-wrapper"></div>
+                    </div>
+
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn continue-btn">Submit Label</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Include Bootstrap JS and dependencies if using Bootstrap's JavaScript features -->
-<!-- Uncomment the following lines if needed -->
-<!--
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
--->
+<%- include("./../partials/footer.ejs") %>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -107,10 +104,7 @@
                         reader.addEventListener('load', function() {
                             var img = document.createElement('img');
                             img.src = reader.result;
-                            img.style.maxWidth = '150px';
-                            img.style.margin = '10px';
-                            img.style.border = '1px solid #ddd';
-                            img.style.borderRadius = '4px';
+                            img.classList.add('image-preview');
                             preview.appendChild(img);
                         }, false);
 
@@ -121,5 +115,3 @@
         });
     });
 </script>
-
-<%- include("./../partials/footer.ejs") %>

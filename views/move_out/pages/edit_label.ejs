@@ -1,112 +1,117 @@
 <%- include("./../partials/header.ejs") %>
 
-<div class="container">
+<div class="container edit-label-container">
     <div class="row justify-content-center">
-        <div class="col-md-8 box-wrapper">
-            <h2 class="text-center">Edit Label</h2>
+        <div class="col-lg-8 col-md-10 col-sm-12">
+            <div class="text-center mb-4">
+                <h2 class="edit-label-title">Edit Label</h2>
+            </div>
 
             <% if (errorMessage) { %>
-                <div class="alert alert-danger">
+                <div class="alert alert-danger text-center">
                     <p><%= errorMessage %></p>
                 </div>
             <% } %>
 
-            <form action="/labels/edit/<%= label.LabelID %>" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="labelName">Label Name:</label>
-                    <input type="text" class="form-control" id="labelName" name="labelName" value="<%= label.LabelName %>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="labelOption">Label Option:</label>
-                    <select class="form-control" id="labelOption" name="labelOption">
-                        <option value="hazard" <%= label.LabelOption === 'hazard' ? 'selected' : '' %>>Hazard</option>
-                        <option value="normal" <%= label.LabelOption === 'normal' ? 'selected' : '' %>>Normal</option>
-                        <option value="fragile" <%= label.LabelOption === 'fragile' ? 'selected' : '' %>>Fragile</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Label Visibility:</label><br>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="status" id="statusPublic" value="public" <%= label.Status === 'public' ? 'checked' : '' %> required>
-                        <label class="form-check-label" for="statusPublic">Public</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="status" id="statusPrivate" value="private" <%= label.Status === 'private' ? 'checked' : '' %>>
-                        <label class="form-check-label" for="statusPrivate">Private</label>
-                    </div>
-                </div>
-
-                <% if (labelContents && labelContents.length > 0) { %>
+            <div class="label-edit-box-wrapper">
+                <form action="/labels/edit/<%= label.LabelID %>" method="post" enctype="multipart/form-data">
                     <div class="form-group">
-                        <label>Existing Content:</label>
+                        <label for="labelName" class="label-form-label"><strong>Label Name:</strong></label>
+                        <input type="text" class="form-control form-control-lg" id="labelName" name="labelName" value="<%= label.LabelName %>" required>
+                    </div>
 
-                        <div id="contentCarousel" class="carousel slide" data-ride="carousel">
-                            <div class="carousel-inner">
-                                <% labelContents.forEach((content, index) => { %>
-                                    <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
-                                        <% if (content.ContentType === 'image') { %>
-                                            <img src="/uploads/<%= content.ContentData %>" class="d-block w-100" alt="Image">
-                                        <% } else if (content.ContentType === 'audio') { %>
-                                            <div class="audio-content-carousel">
-                                                <audio controls class="w-100">
-                                                    <source src="/uploads/<%= content.ContentData %>" type="audio/mpeg">
-                                                    Your browser does not support the audio element.
-                                                </audio>
-                                            </div>
-                                        <% } else if (content.ContentType === 'text') { %>
-                                            <div class="text-content-carousel">
-                                                <p class="carousel-text"><%= content.ContentData %></p>
-                                            </div>
-                                        <% } %>
-                                        <button type="button" class="btn btn-danger btn-sm delete-button" data-content-id="<%= content.ContentID %>">
-                                            <i class="fa fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                <% }) %>
-                            </div>
-                            <a class="carousel-control-prev" href="#contentCarousel" role="button" data-slide="prev">
-                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                <span class="sr-only">Previous</span>
-                            </a>
-                            <a class="carousel-control-next" href="#contentCarousel" role="button" data-slide="next">
-                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                <span class="sr-only">Next</span>
-                            </a>
+                    <div class="form-group">
+                        <label for="labelOption" class="label-form-label"><strong>Label Option:</strong></label>
+                        <select class="form-control form-control-lg full-width-select" id="labelOption" name="labelOption">
+                            <option value="hazard" <%= label.LabelOption === 'hazard' ? 'selected' : '' %>>Hazard</option>
+                            <option value="normal" <%= label.LabelOption === 'normal' ? 'selected' : '' %>>Normal</option>
+                            <option value="fragile" <%= label.LabelOption === 'fragile' ? 'selected' : '' %>>Fragile</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label-form-label"><strong>Label Visibility:</strong></label><br>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="status" id="statusPublic" value="public" <%= label.Status === 'public' ? 'checked' : '' %> required>
+                            <label class="form-check-label" for="statusPublic">Public</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="status" id="statusPrivate" value="private" <%= label.Status === 'private' ? 'checked' : '' %>>
+                            <label class="form-check-label" for="statusPrivate">Private</label>
                         </div>
                     </div>
-                <% } %>
 
-                <div id="removedContentInputs"></div>
+                    <% if (labelContents && labelContents.length > 0) { %>
+                        <div class="form-group">
+                            <label class="label-form-label"><strong>Existing Content:</strong></label>
+                            <div id="contentCarousel" class="carousel slide edit-label-carousel" data-ride="carousel">
+                                <div class="carousel-inner">
+                                    <% labelContents.forEach((content, index) => { %>
+                                        <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+                                            <% if (content.ContentType === 'image') { %>
+                                                <img src="/uploads/<%= content.ContentData %>" class="d-block w-100 content-image" alt="Image">
+                                            <% } else if (content.ContentType === 'audio') { %>
+                                                <div class="audio-content-carousel text-center">
+                                                    <audio controls class="w-100">
+                                                        <source src="/uploads/<%= content.ContentData %>" type="audio/mpeg">
+                                                        Your browser does not support the audio element.
+                                                    </audio>
+                                                </div>
+                                            <% } else if (content.ContentType === 'text') { %>
+                                                <div class="text-content-carousel text-center">
+                                                    <p class="carousel-text styled-text-content"><%= content.ContentData %></p>
+                                                </div>
+                                            <% } %>
+                                            <button type="button" class="btn btn-danger btn-sm delete-button" data-content-id="<%= content.ContentID %>">
+                                                <i class="fa fa-trash"></i> Delete
+                                            </button>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                                <a class="carousel-control-prev" href="#contentCarousel" role="button" data-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="sr-only">Previous</span>
+                                </a>
+                                <a class="carousel-control-next" href="#contentCarousel" role="button" data-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="sr-only">Next</span>
+                                </a>
+                            </div>
+                        </div>
+                    <% } %>
 
-                <div class="form-group">
-                    <label for="contentType">Add New Content:</label>
-                    <select class="form-control" id="contentType" name="contentType">
-                        <option value="">Select Content Type</option>
-                        <option value="text">Text</option>
-                        <option value="image">Images</option>
-                        <option value="audio">Audio</option>
-                    </select>
-                </div>
+                    <div id="removedContentInputs"></div>
 
-                <div class="form-group" id="textContent" style="display: none;">
-                    <label for="contentText">Text Content:</label>
-                    <textarea class="form-control" id="contentText" name="contentText"></textarea>
-                </div>
+                    <div class="form-group">
+                        <label for="contentType" class="label-form-label"><strong>Add New Content:</strong></label>
+                        <select class="form-control form-control-lg full-width-select" id="contentType" name="contentType">
+                            <option value="">Select Content Type</option>
+                            <option value="text">Text</option>
+                            <option value="image">Images</option>
+                            <option value="audio">Audio</option>
+                        </select>
+                    </div>
 
-                <div class="form-group" id="imageContent" style="display: none;">
-                    <label for="contentImages">Upload Images:</label>
-                    <input type="file" class="form-control-file" id="contentImages" name="contentImages" accept="image/*" multiple>
-                </div>
+                    <div class="form-group" id="textContent" style="display: none;">
+                        <label for="contentText" class="label-form-label"><strong>Text Content:</strong></label>
+                        <textarea class="form-control form-control-lg" id="contentText" name="contentText"></textarea>
+                    </div>
 
-                <div class="form-group" id="audioContent" style="display: none;">
-                    <label for="contentAudio">Upload Audio:</label>
-                    <input type="file" class="form-control-file" id="contentAudio" name="contentAudio" accept="audio/*">
-                </div>
+                    <div class="form-group" id="imageContent" style="display: none;">
+                        <label for="contentImages" class="label-form-label"><strong>Upload Images:</strong></label>
+                        <input type="file" class="form-control-file" id="contentImages" name="contentImages" accept="image/*" multiple>
+                    </div>
 
-                <button type="submit" class="btn btn-primary">Update Label</button>
-            </form>
+                    <div class="form-group" id="audioContent" style="display: none;">
+                        <label for="contentAudio" class="label-form-label"><strong>Upload Audio:</strong></label>
+                        <input type="file" class="form-control-file" id="contentAudio" name="contentAudio" accept="audio/*">
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn update-btn">Update Label</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -119,11 +124,11 @@
             interval: false
         });
 
-        document.getElementById('contentType').addEventListener('change', function() {
+        $('#contentType').on('change', function() {
             var contentType = this.value;
-            document.getElementById('textContent').style.display = contentType === 'text' ? 'block' : 'none';
-            document.getElementById('imageContent').style.display = contentType === 'image' ? 'block' : 'none';
-            document.getElementById('audioContent').style.display = contentType === 'audio' ? 'block' : 'none';
+            $('#textContent').toggle(contentType === 'text');
+            $('#imageContent').toggle(contentType === 'image');
+            $('#audioContent').toggle(contentType === 'audio');
         });
 
         $('.delete-button').on('click', function() {

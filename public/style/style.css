@@ -790,3 +790,380 @@ body {
     margin: 20px 0;
 }
 
+/* My Labels Page Styles */
+.my-labels-container {
+    background-color: #f5f5f5;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+}
+
+.my-labels-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #0056b3;
+    margin-bottom: 25px;
+}
+
+.create-label-btn {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    transition: background-color 0.3s ease;
+}
+
+.create-label-btn:hover {
+    background-color: #0056b3;
+}
+
+.label-cards-wrapper {
+    margin-top: 30px;
+}
+
+.label-card {
+    transition: transform 0.3s ease;
+    border: 1px solid #ffffff;
+    border-radius: 10px;
+}
+
+.label-card:hover {
+    transform: scale(1.05); /* Slight zoom effect */
+}
+
+.qr-code-container {
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+    display: inline-block;
+}
+
+.qr-code-image {
+    max-width: 80px;
+    background-color: transparent !important;
+    border: none;
+}
+
+/* Button group styles */
+.label-hover-overlay .btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Hover button styles */
+.label-hover-overlay .btn {
+    margin: 5px 0;
+    width: 120px;
+    transition: all 0.3s ease;
+}
+
+.label-hover-overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.label-image-container:hover .label-hover-overlay {
+    opacity: 1;
+}
+
+
+/* Create Label Page Styles */
+.create-label-container {
+    background-color: #f5f5f5;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.create-label-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #0056b3;
+    margin-bottom: 25px;
+}
+
+.label-box-wrapper {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.label-form-label {
+    font-size: 1.2rem;
+    color: #0056b3;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.carousel-image {
+    max-height: 300px;
+    object-fit: contain;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.label-carousel .carousel-indicators li {
+    background-color: #007BFF;
+}
+
+.label-carousel .carousel-control-prev,
+.label-carousel .carousel-control-next {
+    width: auto;
+    background-image: none;
+    opacity: 1;
+    color: #007BFF;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.label-carousel .carousel-control-prev-icon,
+.label-carousel .carousel-control-next-icon {
+    filter: invert(100%);
+    opacity: 0.8;
+}
+
+.label-carousel .carousel-control-prev-icon:hover,
+.label-carousel .carousel-control-next-icon:hover {
+    opacity: 1;
+}
+
+.continue-btn {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.continue-btn:hover {
+    background-color: #0056b3;
+}
+
+
+
+/* Add Label Content Page Styles */
+.add-label-content-container {
+    background-color: #f5f5f5;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.add-label-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #0056b3;
+    margin-bottom: 20px;
+}
+
+.add-label-description {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.label-content-box-wrapper {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.label-form-label {
+    font-size: 1.2rem;
+    color: #0056b3;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: block;
+    text-align: left;
+}
+
+.btn-group-toggle .btn {
+    margin-right: 10px;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+}
+
+.content-input {
+    margin-top: 30px;
+}
+
+.form-control-lg {
+    padding: 15px;
+    font-size: 1.2rem;
+    border-radius: 6px;
+}
+
+.image-preview-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.image-preview {
+    max-width: 150px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.image-preview:hover {
+    transform: scale(1.05);
+}
+
+.continue-btn {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.continue-btn:hover {
+    background-color: #0056b3;
+}
+
+
+
+/* Edit Label Page Specific Styles */
+.edit-label-container {
+    background-color: #f5f5f5;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.edit-label-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #0056b3;
+    margin-bottom: 25px;
+}
+
+.label-edit-box-wrapper {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.label-form-label {
+    font-size: 1.2rem;
+    color: #0056b3;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: block;
+    text-align: left;
+}
+
+.form-control-lg {
+    padding: 15px;
+    font-size: 1.2rem;
+    border-radius: 6px;
+}
+
+.update-btn {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.update-btn:hover {
+    background-color: #0056b3;
+}
+
+.edit-label-carousel .carousel-fixed-height {
+    height: 500px;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    position: relative;
+}
+
+.edit-label-carousel .carousel-fixed-height .carousel-inner {
+    height: 100%;
+}
+
+.edit-label-carousel .carousel-item {
+    height: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.edit-label-carousel .carousel-text {
+    font-size: 1.5em;
+    color: #333;
+}
+
+.edit-label-carousel .delete-button {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.edit-label-carousel .delete-button:hover {
+    opacity: 1;
+}
+
+.edit-label-carousel .delete-button i {
+    margin-right: 5px;
+}
+
+.edit-label-carousel .carousel-control-prev,
+.edit-label-carousel .carousel-control-next {
+    width: auto;
+    background-image: none;
+    opacity: 1;
+    color: #333;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+
+
