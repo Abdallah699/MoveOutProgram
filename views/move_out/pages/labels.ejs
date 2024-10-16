@@ -20,14 +20,14 @@
                                     <div class="card-body p-0">
                                         <div class="label-image-container position-relative">
                                             <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
-
+            
                                             <div class="label-overlay">
                                                 <h5 class="label-name"><%= label.LabelName %></h5>
                                                 <p class="label-type">
                                                     <%= label.LabelOption %> | <%= label.Status ? (label.Status.charAt(0).toUpperCase() + label.Status.slice(1)) : 'Private' %>
                                                 </p>
                                             </div>
-
+            
                                             <div class="label-hover-overlay">
                                                 <div class="btn-group-vertical">
                                                     <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
@@ -40,10 +40,32 @@
                                                     <% } %>
                                                 </div>
                                             </div>
-
-                                            <div class="qr-code-container">
+            
+                                            <!-- Insurance logo display above the QR code -->
+                                            <% if (label.LabelOption === 'insurance' && label.insuranceLogo) { %>
+                                                <div class="insurance-logo-container text-center mb-2">
+                                                    <img src="/uploads/<%= label.insuranceLogo %>" alt="Insurance Logo" class="img-fluid insurance-logo" style="max-height: 80px;">
+                                                </div>
+                                            <% } %>
+            
+                                            <!-- QR code display -->
+                                            <div class="qr-code-container text-center mb-3">
                                                 <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image">
                                             </div>
+            
+                                            <!-- Insurance items display with name and price -->
+                                            <% if (label.LabelOption === 'insurance' && label.insuranceItems && label.insuranceItems.length > 0) { %>
+                                                <div class="insurance-items-container mt-3 text-left">
+                                                    <h6>Insurance Items:</h6>
+                                                    <ul class="list-unstyled">
+                                                        <% label.insuranceItems.forEach(function(item) { %>
+                                                            <li>
+                                                                <strong><%= item.ItemName %></strong> - <%= item.ItemValue %> <%= item.Currency %>
+                                                            </li>
+                                                        <% }); %>
+                                                    </ul>
+                                                </div>
+                                            <% } %>
                                         </div>
                                     </div>
                                 </div>
@@ -54,40 +76,8 @@
                     <% } %>
                 </div>
             </div>
+            
         </div>
-    </div>
-</div>
-
-<!-- Share Modal -->
-<div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <form id="shareForm" method="post" onsubmit="return validateAndSubmit(this);">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="shareModalLabel">Share Label</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="outline: none; border: none;">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Select the user you want to share the label with:</p>
-                    <div class="form-group">
-                        <label for="recipientEmail">Recipient Username:</label>
-                        <select class="form-control" id="recipientEmail" name="recipientEmail" required>
-                            <% users.forEach(function(userItem) { %>
-                                <% if (userItem.UserID !== user.UserID) { %>
-                                    <option value="<%= userItem.Email %>"><%= userItem.FullName %> - <%= userItem.Email %></option>
-                                <% } %>
-                            <% }); %>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Share Label</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" style="outline: none; border: none;">Cancel</button>
-                </div>
-            </div>
-        </form>
     </div>
 </div>
 

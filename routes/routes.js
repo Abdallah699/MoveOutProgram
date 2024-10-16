@@ -178,9 +178,10 @@ router.get("/create-label", requireLogin, (req, res) => {
 
 router.post('/create-label/submit', requireLogin, upload.fields([
     { name: 'contentImages', maxCount: 5 },
-    { name: 'contentAudio', maxCount: 1 }
+    { name: 'contentAudio', maxCount: 1 },
+    { name: 'insuranceLogo', maxCount: 1 } // Add insuranceLogo to file upload
 ]), async (req, res) => {
-    const { labelDesign, labelName, labelOption, contentType, contentText, status } = req.body;
+    const { labelDesign, labelName, labelOption, contentType, contentText, status, itemNames, itemValues, itemCurrencies } = req.body;
     const userId = req.user.UserID;
 
     let contentData = {};
@@ -195,19 +196,85 @@ router.post('/create-label/submit', requireLogin, upload.fields([
         contentData = { type: 'image', data: imageFiles };
     }
 
-    await createLabel(userId, labelDesign, labelName, labelOption, status, contentData);
-    res.redirect('/labels');
+    // Insert the label into the database
+    const connection = await createConnection();
+    try {
+        await connection.query(
+            'INSERT INTO Labels (UserID, LabelDesign, LabelName, LabelOption, Status) VALUES (?, ?, ?, ?, ?)',
+            [userId, labelDesign, labelName, labelOption, status]
+        );
+
+        // Get the newly inserted LabelID
+        const [result] = await connection.query('SELECT LAST_INSERT_ID() AS LabelID');
+        const labelId = result[0].LabelID;
+
+        // If it's an insurance label, store the insurance items
+        if (labelOption === 'insurance') {
+            const insuranceLogo = req.files['insuranceLogo'] ? req.files['insuranceLogo'][0].filename : null;
+
+            // Ensure itemNames, itemValues, and itemCurrencies are defined and are arrays
+            if (Array.isArray(itemNames) && Array.isArray(itemValues) && Array.isArray(itemCurrencies)) {
+                // Loop through each item and insert it into InsuranceBoxItems table
+                for (let i = 0; i < itemNames.length; i++) {
+                    await connection.query(
+                        'INSERT INTO InsuranceBoxItems (LabelID, ItemName, ItemValue, Currency) VALUES (?, ?, ?, ?)',
+                        [labelId, itemNames[i], itemValues[i], itemCurrencies[i]]
+                    );
+                }
+            }
+
+            // Save the insurance company logo in LabelContents if provided
+            if (insuranceLogo) {
+                await connection.query(
+                    'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+                    [labelId, 'image', insuranceLogo]
+                );
+            }
+        }
+
+        // Save the rest of the content (text/audio/images)
+        if (contentData.type === 'text') {
+            await connection.query(
+                'INSERT INTO LabelContents (LabelID, ContentType, ContentText) VALUES (?, ?, ?)',
+                [labelId, 'text', contentData.data]
+            );
+        } else if (contentData.type === 'audio' && contentData.data) {
+            await connection.query(
+                'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+                [labelId, 'audio', contentData.data.filename]
+            );
+        } else if (contentData.type === 'image') {
+            for (const image of contentData.data) {
+                await connection.query(
+                    'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+                    [labelId, 'image', image.filename]
+                );
+            }
+        }
+
+        res.redirect('/labels');
+    } catch (error) {
+        console.error('Error creating label:', error);
+        res.status(500).send('Error creating label');
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
+    }
 });
+
 
 router.get('/labels', requireLogin, async (req, res) => {
     const connection = await createConnection();
 
     try {
-        // Fetch labels belonging to the current user
-        const [labels] = await connection.query('SELECT * FROM Labels WHERE UserID = ?', [req.user.UserID]);
-        console.log("Fetched labels:", labels);
+        const [labels] = await connection.query(`
+            SELECT l.*, ib.ItemName, ib.ItemValue, ib.Currency, lc.ContentData AS insuranceLogo
+            FROM Labels l
+            LEFT JOIN InsuranceBoxItems ib ON l.LabelID = ib.LabelID
+            LEFT JOIN LabelContents lc ON l.LabelID = lc.LabelID AND lc.ContentType = 'image'
+            WHERE l.UserID = ?`, [req.user.UserID]);
 
-        // Generate QR codes for each label
         const qrCodes = {};
         for (const label of labels) {
             const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
@@ -219,35 +286,12 @@ router.get('/labels', requireLogin, async (req, res) => {
             };
             qrCodes[label.LabelID] = await QRCode.toDataURL(qrUrl, qrCodeOptions);
         }
-        console.log("Generated QR Codes:", qrCodes);
 
-        // Fetch all users for the phone book (excluding the current user)
-        const [users] = await connection.query('SELECT UserID, FullName, Email FROM Users WHERE UserID != ?', [req.user.UserID]);
-        console.log("Fetched users:", users);
-
-        // Check if the users array is actually fetched and exists
-        if (!users || users.length === 0) {
-            console.warn("No users found other than the current user.");
-        }
-
-        // Log all variables being sent to the template
-        console.log("Sending data to template: ", {
-            labels,
-            qrCodes,
-            title: 'My Labels',
-            isAuthenticated: true,
-            user: req.user,
-            users // Check if this is defined properly before rendering
-        });
-
-        // Pass labels, users, and other necessary data to the template
         res.render('move_out/pages/labels.ejs', {
             labels,
             qrCodes,
-            title: 'My Labels',
             isAuthenticated: true,
-            user: req.user,
-            users // Pass the users array to the template
+            user: req.user
         });
     } catch (error) {
         console.error('Error fetching labels or users:', error);
@@ -263,10 +307,16 @@ router.get('/labels', requireLogin, async (req, res) => {
 
 
 
-router.post("/create-label/step2", requireLogin, (req, res) => {
-    const { labelDesign, labelName, labelOption, status } = req.body;
 
-    if (labelName.length > 10) {
+
+router.post("/create-label/step2", requireLogin, (req, res) => {
+    const { labelDesign, labelName, labelOption, status, itemNames, itemValues, itemCurrencies } = req.body;
+
+    // Log form submission data for debugging
+    console.log("Form data received:", req.body);
+
+    // Ensure labelName exists and is a string before checking its length
+    if (typeof labelName === 'string' && labelName.trim().length > 10) {
         return res.status(400).render("move_out/pages/create_label.ejs", {
             errorMessage: "Label name cannot be longer than 10 characters.",
             title: "Create Label",
@@ -276,6 +326,28 @@ router.post("/create-label/step2", requireLogin, (req, res) => {
         });
     }
 
+    // If the label option is "insurance", handle final submission here without going to step 2
+    if (labelOption === 'insurance') {
+        console.log("Insurance selected. Item Names:", itemNames);
+        console.log("Item Values:", itemValues);
+        console.log("Item Currencies:", itemCurrencies);
+
+        // Check if the insurance data fields are valid
+        if (!itemNames || !itemValues || !itemCurrencies || !Array.isArray(itemNames) || !Array.isArray(itemValues) || !Array.isArray(itemCurrencies)) {
+            return res.status(400).render("move_out/pages/create_label.ejs", {
+                errorMessage: "Insurance label requires item names, values, and currencies.",
+                title: "Create Label",
+                labelModels: JSON.parse(fs.readFileSync(path.join(__dirname, '../config/labelModels.json'), 'utf-8')),
+                isAuthenticated: !!req.user,
+                user: req.user
+            });
+        }
+
+        // Skip step 2 and directly call the final label submission logic
+        return res.redirect('/create-label/submit');  // Direct to label submission route
+    }
+
+    // For non-insurance labels, proceed to step two for content
     res.render('move_out/pages/label-content.ejs', {
         labelDesign,
         labelName,
@@ -287,6 +359,10 @@ router.post("/create-label/step2", requireLogin, (req, res) => {
         user: req.user
     });
 });
+
+
+
+
 
 router.get('/labels/view/:id', requireLogin, canViewLabel, async (req, res) => {
     const label = req.label;
@@ -423,18 +499,15 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
         const recipientUserId = recipientRows[0].UserID;
         console.log('Recipient UserID:', recipientUserId);
 
-        // Generate a unique share token
         const shareToken = crypto.randomBytes(16).toString('hex');
         console.log('Generated share token:', shareToken);
 
-        // Insert into SharedLabels table
         await connection.query(
             'INSERT INTO SharedLabels (LabelID, ShareToken, RecipientEmail, RecipientUserID) VALUES (?, ?, ?, ?)',
             [labelId, shareToken, trimmedRecipientEmail, recipientUserId]
         );
         console.log('SharedLabels insert success');
 
-        // Send an email notification to the recipient
         const shareLink = `http://localhost:1339/labels/view/${labelId}?token=${shareToken}`;
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -467,15 +540,11 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
 });
 
 
-
-
-
 router.get('/shared-labels', requireLogin, async (req, res) => {
     const userId = req.user.UserID;
     const connection = await createConnection();
 
     try {
-        // Fetch labels shared with the logged-in user
         const [sharedLabels] = await connection.query(`
             SELECT sl.LabelID, l.LabelName, l.LabelDesign, l.LabelOption, l.Status, u.FullName AS SharedBy
             FROM SharedLabels sl
@@ -486,7 +555,6 @@ router.get('/shared-labels', requireLogin, async (req, res) => {
 
         console.log('Fetched shared labels:', sharedLabels);
 
-        // Generate QR codes for each shared label
         const qrCodes = {};
         for (const label of sharedLabels) {
             const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
@@ -502,7 +570,7 @@ router.get('/shared-labels', requireLogin, async (req, res) => {
         res.render('move_out/pages/shared_labels.ejs', {
             title: 'Shared Labels',
             sharedLabels,
-            qrCodes, // Pass generated QR codes to the template
+            qrCodes,
             isAuthenticated: true,
             user: req.user
         });
@@ -515,8 +583,6 @@ router.get('/shared-labels', requireLogin, async (req, res) => {
         }
     }
 });
-
-
 
 
 router.get('/phonebook', requireLogin, async (req, res) => {
@@ -550,7 +616,6 @@ router.get('/phonebook', requireLogin, async (req, res) => {
         }
     }
 });
-
 
 
 router.get('/users/:userId/labels', async (req, res) => {

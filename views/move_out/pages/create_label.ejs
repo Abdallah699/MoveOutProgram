@@ -14,10 +14,9 @@
             <% } %>
 
             <div class="label-box-wrapper">
-                <form action="/create-label/step2" method="post" id="createLabelForm">
+                <form action="/create-label/step2" method="post" id="createLabelForm" enctype="multipart/form-data">
                     <div class="form-group">
                         <label class="label-form-label"><strong>Select a label design:</strong></label>
-
                         <div id="labelCarousel" class="carousel slide label-carousel" data-ride="carousel" data-interval="false">
                             <ol class="carousel-indicators">
                                 <% labelModels.forEach(function(model, index) { %>
@@ -42,7 +41,6 @@
                                 <span class="sr-only">Next</span>
                             </a>
                         </div>
-
                         <input type="hidden" id="labelDesignInput" name="labelDesign" value="<%= labelModels[0].filename %>">
                     </div>
 
@@ -54,31 +52,50 @@
                     <div class="form-group">
                         <label class="label-form-label"><strong>Label Option:</strong></label><br>
                         <div class="form-check form-check-inline">
-                            <label class="form-check-label">
-                                <input type="radio" class="form-check-input" name="labelOption" value="hazard" required> Hazard
-                            </label>
+                            <input type="radio" class="form-check-input" name="labelOption" value="normal" required> Normal
                         </div>
                         <div class="form-check form-check-inline">
-                            <label class="form-check-label">
-                                <input type="radio" class="form-check-input" name="labelOption" value="normal"> Normal
-                            </label>
+                            <input type="radio" class="form-check-input" name="labelOption" value="hazard"> Hazard
                         </div>
                         <div class="form-check form-check-inline">
-                            <label class="form-check-label">
-                                <input type="radio" class="form-check-input" name="labelOption" value="fragile"> Fragile
-                            </label>
+                            <input type="radio" class="form-check-input" name="labelOption" value="fragile"> Fragile
                         </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" class="form-check-input" name="labelOption" value="insurance"> Insurance
+                        </div>
+                    </div>
+
+                    <!-- Insurance fields will appear here when "Insurance" is selected -->
+                    <div id="insuranceFields" style="display: none;">
+                        <div class="form-group">
+                            <label for="insuranceLogo" class="label-form-label"><strong>Upload Insurance Company Logo:</strong></label>
+                            <input type="file" class="form-control" name="insuranceLogo" accept="image/*">
+                        </div>
+
+                        <div id="insuranceItems">
+                            <div class="form-group">
+                                <label class="label-form-label"><strong>Item Name:</strong></label>
+                                <input type="text" class="form-control" name="itemNames[]" placeholder="Enter item name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="label-form-label"><strong>Item Value:</strong></label>
+                                <input type="number" class="form-control" name="itemValues[]" placeholder="Enter item value" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="label-form-label"><strong>Currency:</strong></label>
+                                <input type="text" class="form-control" name="itemCurrencies[]" placeholder="Enter currency" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="addItem">Add another item</button>
                     </div>
 
                     <div class="form-group">
                         <label class="label-form-label"><strong>Label Visibility:</strong></label><br>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="status" id="statusPublic" value="public" required>
-                            <label class="form-check-label" for="statusPublic">Public</label>
+                            <input class="form-check-input" type="radio" name="status" value="public" required> Public
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="status" id="statusPrivate" value="private">
-                            <label class="form-check-label" for="statusPrivate">Private</label>
+                            <input class="form-check-input" type="radio" name="status" value="private"> Private
                         </div>
                     </div>
 
@@ -94,21 +111,39 @@
 <%- include("./../partials/footer.ejs") %>
 
 <script>
-    var labelModels = <%- JSON.stringify(labelModels) %>;
+    // Show insurance fields if insurance option is selected
+    $('input[name="labelOption"]').change(function () {
+        if ($(this).val() === 'insurance') {
+            $('#insuranceFields').show();
+        } else {
+            $('#insuranceFields').hide();
+        }
+    });
 
-    $(document).ready(function() {
-        $('#labelCarousel').on('slid.bs.carousel', function () {
-            var activeIndex = $(this).find('.carousel-inner .carousel-item.active').index();
-            var selectedLabelDesign = labelModels[activeIndex].filename;
-            $('#labelDesignInput').val(selectedLabelDesign);
-        });
+    // Add more items for insurance label
+    $('#addItem').click(function () {
+        const itemHTML = `
+            <div class="form-group">
+                <label class="label-form-label"><strong>Item Name:</strong></label>
+                <input type="text" class="form-control" name="itemNames[]" placeholder="Enter item name" required>
+            </div>
+            <div class="form-group">
+                <label class="label-form-label"><strong>Item Value:</strong></label>
+                <input type="number" class="form-control" name="itemValues[]" placeholder="Enter item value" required>
+            </div>
+            <div class="form-group">
+                <label class="label-form-label"><strong>Currency:</strong></label>
+                <input type="text" class="form-control" name="itemCurrencies[]" placeholder="Enter currency" required>
+            </div>`;
+        $('#insuranceItems').append(itemHTML);
+    });
 
-        $('#createLabelForm').on('submit', function (e) {
-            var labelName = $('#labelName').val();
-            if (labelName.length > 10) {
-                e.preventDefault();
-                alert('Label name cannot be longer than 10 characters!');
-            }
-        });
+    // Conditionally change form action based on label option selection
+    $('#createLabelForm').on('submit', function (e) {
+        const selectedOption = $('input[name="labelOption"]:checked').val();
+        if (selectedOption === 'insurance') {
+            // Change the form action to skip step 2 for insurance labels
+            $('#createLabelForm').attr('action', '/create-label/submit');
+        }
     });
 </script>

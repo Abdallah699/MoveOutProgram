@@ -37,6 +37,7 @@ CREATE TABLE Labels (
     LabelName VARCHAR(255),
     LabelOption VARCHAR(50),
     Status ENUM('public', 'private') DEFAULT 'private',
+    InsuranceLogo VARCHAR(255),  -- Adding column to store insurance logo path
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
@@ -121,4 +122,14 @@ CREATE TABLE SharedLabels (
     ExpiresAt TIMESTAMP NULL,
     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE,
     FOREIGN KEY (RecipientUserID) REFERENCES Users(UserID) ON DELETE CASCADE
+);
+
+-- Create InsuranceBoxItems table
+CREATE TABLE InsuranceBoxItems (
+    InsuranceItemID INT PRIMARY KEY AUTO_INCREMENT,
+    LabelID INT NOT NULL,
+    ItemName VARCHAR(255),
+    ItemValue DECIMAL(10, 2),
+    Currency VARCHAR(10),
+    FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
 );
