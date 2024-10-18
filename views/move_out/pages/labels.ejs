@@ -21,18 +21,42 @@
                                         <div class="label-image-container position-relative">
                                             <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
 
-                                            <!-- Label Overlay with Name and Type -->
+                                            <!-- Label Overlay -->
                                             <div class="label-overlay">
-                                                <h5 class="label-name"><%= label.LabelName %></h5>
-                                                <p class="label-type">
-                                                    <%= label.LabelOption %> | <%= label.Status ? (label.Status.charAt(0).toUpperCase() + label.Status.slice(1)) : 'Private' %>
-                                                </p>
+                                                <% if (label.LabelOption !== 'insurance') { %>
+                                                    <!-- For non-insurance labels, display label name and type -->
+                                                    <h5 class="label-name"><%= label.LabelName %></h5>
+                                                    <p class="label-type">
+                                                        <%= label.LabelOption %> | <%= label.Status ? (label.Status.charAt(0).toUpperCase() + label.Status.slice(1)) : 'Private' %>
+                                                    </p>
+                                                <% } else { %>
+                                                    <!-- For insurance labels, display item details -->
+                                                    <% if (label.insuranceItems && label.insuranceItems.length > 0) { %>
+                                                        <ul class="list-unstyled insurance-item-list">
+                                                            <% var maxItemsToShow = 4; %>
+                                                            <% label.insuranceItems.slice(0, maxItemsToShow).forEach(function(item) { %>
+                                                                <li>
+                                                                    <strong><%= item.ItemName %></strong> - <%= item.ItemValue %> <%= item.Currency %>
+                                                                </li>
+                                                            <% }); %>
+                                                            <% if (label.insuranceItems.length > maxItemsToShow) { %>
+                                                                <li>To view the rest of the items, press <a href="/insurance/view/<%= label.LabelID %>">View</a></li>
+                                                            <% } %>
+                                                        </ul>
+                                                    <% } else { %>
+                                                        <p>No items added.</p>
+                                                    <% } %>
+                                                <% } %>
                                             </div>
 
                                             <!-- Label Hover Overlay with Buttons -->
                                             <div class="label-hover-overlay">
                                                 <div class="btn-group-vertical">
-                                                    <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
+                                                    <% if (label.LabelOption === 'insurance') { %>
+                                                        <a href="/insurance/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
+                                                    <% } else { %>
+                                                        <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
+                                                    <% } %>
                                                     <a href="/labels/edit/<%= label.LabelID %>" class="btn btn-warning">Edit</a>
                                                     <form action="/labels/delete/<%= label.LabelID %>" method="POST" style="display:inline;" class="delete-form">
                                                         <button type="submit" class="btn btn-danger">Delete</button>
@@ -44,31 +68,8 @@
                                             </div>
                                         </div>
 
-                                        <!-- Content Specific to Label Type -->
-                                        <% if (label.LabelOption !== 'insurance') { %>
-                                            <!-- Normal Labels: QR Code Positioned within the Card -->
-                                            <div class="qr-code-container-normal">
-                                                <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image">
-                                            </div>
-                                        <% } else { %>
-                                            <!-- Insurance Labels: Display Items and Logos -->
-                                            <% if (label.insuranceItems && label.insuranceItems.length > 0) { %>
-                                                <div class="insurance-items-container mt-3 text-left">
-                                                    <h6>Insurance Items:</h6>
-                                                    <ul class="list-unstyled">
-                                                        <% var maxItemsToShow = 3; %>
-                                                        <% label.insuranceItems.slice(0, maxItemsToShow).forEach(function(item) { %>
-                                                            <li>
-                                                                <strong><%= item.ItemName %></strong> - <%= item.ItemValue %> <%= item.Currency %>
-                                                            </li>
-                                                        <% }); %>
-                                                        <% if (label.insuranceItems.length > maxItemsToShow) { %>
-                                                            <li>And more items... <a href="/labels/view/<%= label.LabelID %>">View</a></li>
-                                                        <% } %>
-                                                    </ul>
-                                                </div>
-                                            <% } %>
-                                            <!-- Insurance Logo and QR Code at the Bottom -->
+                                        <!-- QR Code and Insurance Logo -->
+                                        <% if (label.LabelOption === 'insurance') { %>
                                             <div class="logo-qr-container mt-3 d-flex justify-content-between align-items-center">
                                                 <% if (label.insuranceLogo) { %>
                                                     <div class="insurance-logo-container">
@@ -78,6 +79,10 @@
                                                 <div class="qr-code-container-insurance text-center">
                                                     <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image-insurance">
                                                 </div>
+                                            </div>
+                                        <% } else { %>
+                                            <div class="qr-code-container-normal">
+                                                <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image">
                                             </div>
                                         <% } %>
                                     </div>
@@ -91,6 +96,40 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <form id="shareForm" method="POST">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shareModalLabel">Share Label</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="recipientUserId">Select a User:</label>
+            <select class="form-control" id="recipientUserId" name="recipientUserId" required>
+              <% users.forEach(function(userItem) { %>
+                <% if (userItem.UserID !== user.UserID) { %>
+                  <option value="<%= userItem.UserID %>"><%= userItem.FullName %> (<%= userItem.Email %>)</option>
+                <% } %>
+              <% }); %>
+            </select>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Share</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 <%- include("./../partials/footer.ejs") %>

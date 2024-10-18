@@ -1,0 +1,40 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container my-labels-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-md-10 col-sm-12">
+            <div class="text-center mb-4">
+                <h2 class="my-labels-title">Insurance Label: <%= label.LabelName || 'Insurance Label' %></h2>
+            </div>
+
+            <div class="insurance-items-table">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Item Value</th>
+                            <th>Currency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (items.length > 0) { %>
+                            <% items.forEach(function(item) { %>
+                                <tr>
+                                    <td><%= item.ItemName %></td>
+                                    <td><%= item.ItemValue %></td>
+                                    <td><%= item.Currency %></td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="3" class="text-center">No items found.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>

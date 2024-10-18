@@ -56,11 +56,11 @@ CREATE TABLE Boxes (
 CREATE TABLE LabelContents (
     ContentID INT PRIMARY KEY AUTO_INCREMENT,
     LabelID INT,
-    ContentType ENUM('text', 'audio', 'image') NOT NULL,
     ContentText TEXT,
     ContentData VARCHAR(255),
     ContentURL VARCHAR(255),
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ContentType VARCHAR(20),
     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
 );
 

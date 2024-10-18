@@ -214,7 +214,7 @@ router.post("/create-label/step2", requireLogin, parseForm.none(), (req, res) =>
 });
 
 // Updated /create-label/submit route
-router.post('/create-label/submit', requireLogin, upload.fields([
+requireLogin, upload.fields([
     { name: 'contentImages', maxCount: 5 },
     { name: 'contentAudio', maxCount: 1 },
     { name: 'insuranceLogo', maxCount: 1 }
@@ -295,19 +295,146 @@ router.post('/create-label/submit', requireLogin, upload.fields([
             await connection.end();
         }
     }
+}
+
+
+router.post('/create-label/submit', requireLogin, upload.fields([
+    { name: 'contentImages', maxCount: 5 },
+    { name: 'contentAudio', maxCount: 1 },
+    { name: 'insuranceLogo', maxCount: 1 }
+]), async (req, res) => {
+    const {
+        labelDesign,
+        labelName,
+        labelOption,
+        contentType,
+        contentText,
+        status,
+        itemNames,
+        itemValues,
+        itemCurrencies
+    } = req.body;
+    const userId = req.user.UserID;
+
+    console.log('Form data received in submit:', req.body);
+    console.log('Files received:', req.files);
+
+    let contentData = {};
+
+    if (contentType === 'text') {
+        contentData = { type: 'text', data: contentText };
+    } else if (contentType === 'audio') {
+        const audioFile = req.files['contentAudio'] ? req.files['contentAudio'][0] : null;
+        contentData = { type: 'audio', data: audioFile };
+    } else if (contentType === 'image') {
+        const imageFiles = req.files['contentImages'] || [];
+        contentData = { type: 'image', data: imageFiles };
+    }
+
+    const connection = await createConnection();
+    try {
+        // Handle labelName for insurance labels
+        let labelNameToSave = labelName;
+        if (labelOption === 'insurance' && (!labelName || labelName.trim() === '')) {
+            labelNameToSave = null; // or set to a default name if preferred
+        }
+
+        await connection.query(
+            'INSERT INTO Labels (UserID, LabelDesign, LabelName, LabelOption, Status) VALUES (?, ?, ?, ?, ?)',
+            [userId, labelDesign, labelNameToSave, labelOption, status]
+        );
+
+        const [result] = await connection.query('SELECT LAST_INSERT_ID() AS LabelID');
+        const labelId = result[0].LabelID;
+
+        if (labelOption === 'insurance') {
+            const insuranceLogo = req.files['insuranceLogo'] ? req.files['insuranceLogo'][0].filename : null;
+
+            // Ensure itemNames, itemValues, itemCurrencies are arrays
+            let itemNamesArray = itemNames;
+            let itemValuesArray = itemValues;
+            let itemCurrenciesArray = itemCurrencies;
+            if (!Array.isArray(itemNamesArray)) {
+                itemNamesArray = [itemNamesArray];
+                itemValuesArray = [itemValuesArray];
+                itemCurrenciesArray = [itemCurrenciesArray];
+            }
+
+            if (Array.isArray(itemNamesArray) && Array.isArray(itemValuesArray) && Array.isArray(itemCurrenciesArray)) {
+                for (let i = 0; i < itemNamesArray.length; i++) {
+                    await connection.query(
+                        'INSERT INTO InsuranceBoxItems (LabelID, ItemName, ItemValue, Currency) VALUES (?, ?, ?, ?)',
+                        [labelId, itemNamesArray[i], itemValuesArray[i], itemCurrenciesArray[i]]
+                    );
+                }
+            }
+
+            if (insuranceLogo) {
+                await connection.query(
+                    'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+                    [labelId, 'insuranceLogo', insuranceLogo]
+                );
+            }
+        }
+
+        // Handle other content types
+        if (contentData.type === 'text') {
+            await connection.query(
+                'INSERT INTO LabelContents (LabelID, ContentType, ContentText) VALUES (?, ?, ?)',
+                [labelId, 'text', contentData.data]
+            );
+        } else if (contentData.type === 'audio' && contentData.data) {
+            await connection.query(
+                'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+                [labelId, 'audio', contentData.data.filename]
+            );
+        } else if (contentData.type === 'image') {
+            for (const image of contentData.data) {
+                await connection.query(
+                    'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+                    [labelId, 'image', image.filename]
+                );
+            }
+        }
+
+        res.redirect('/labels');
+    } catch (error) {
+        console.error('Error creating label:', error);
+        res.status(500).send('Error creating label');
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
+    }
 });
 
 router.get('/labels', requireLogin, async (req, res) => {
     const connection = await createConnection();
 
     try {
-        const [labels] = await connection.query(`
-            SELECT l.*, ib.ItemName, ib.ItemValue, ib.Currency, lc.ContentData AS insuranceLogo
-            FROM Labels l
-            LEFT JOIN InsuranceBoxItems ib ON l.LabelID = ib.LabelID
-            LEFT JOIN LabelContents lc ON l.LabelID = lc.LabelID AND lc.ContentType = 'image'
-            WHERE l.UserID = ?`, [req.user.UserID]);
+        // Fetch all labels for the user
+        const [labels] = await connection.query('SELECT * FROM Labels WHERE UserID = ?', [req.user.UserID]);
 
+        // Fetch all users (excluding the current user)
+        const [users] = await connection.query('SELECT UserID, FullName, Email FROM Users WHERE UserID != ?', [req.user.UserID]);
+
+        for (let label of labels) {
+            if (label.LabelOption === 'insurance') {
+                // Fetch insurance items
+                const [insuranceItems] = await connection.query('SELECT * FROM InsuranceBoxItems WHERE LabelID = ?', [label.LabelID]);
+                label.insuranceItems = insuranceItems;
+
+                // Fetch insurance logo
+                const [logoRows] = await connection.query('SELECT ContentData FROM LabelContents WHERE LabelID = ? AND ContentType = ?', [label.LabelID, 'insuranceLogo']);
+                if (logoRows.length > 0) {
+                    label.insuranceLogo = logoRows[0].ContentData;
+                } else {
+                    label.insuranceLogo = null;
+                }
+            }
+        }
+
+        // Generate QR codes for each label
         const qrCodes = {};
         for (const label of labels) {
             const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
@@ -320,9 +447,13 @@ router.get('/labels', requireLogin, async (req, res) => {
             qrCodes[label.LabelID] = await QRCode.toDataURL(qrUrl, qrCodeOptions);
         }
 
+        // Before rendering, ensure users is defined
+        console.log('Users:', users); // Add this line to check if users is defined
+
         res.render('move_out/pages/labels.ejs', {
             labels,
             qrCodes,
+            users, // Pass users to the template
             isAuthenticated: true,
             user: req.user
         });
@@ -334,6 +465,34 @@ router.get('/labels', requireLogin, async (req, res) => {
             await connection.end();
         }
     }
+});
+
+
+router.get('/labels/view/:id', requireLogin, canViewLabel, async (req, res) => {
+    const label = req.label;
+    const canEdit = req.canEdit;
+
+    const connection = await createConnection();
+    const [labelContents] = await connection.query('SELECT * FROM LabelContents WHERE LabelID = ?', [label.LabelID]);
+
+    const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
+    const qrCodeOptions = {
+        color: {
+            dark: '#000000',
+            light: '#0000'
+        }
+    };
+    const qrCode = await QRCode.toDataURL(qrUrl, qrCodeOptions);
+
+    res.render('move_out/pages/view.ejs', {
+        label,
+        labelContents,
+        qrCode,
+        title: `Viewing Label: ${label.LabelName}`,
+        canEdit,
+        isAuthenticated: !!req.user,
+        user: req.user
+    });
 });
 
 router.get('/labels/view/:id', requireLogin, canViewLabel, async (req, res) => {
@@ -435,13 +594,11 @@ router.post('/labels/edit/:id', requireLogin, upload.fields([
 router.post('/labels/share/:id', requireLogin, async (req, res) => {
     const labelId = req.params.id;
     const userId = req.user.UserID;
-    const { recipientEmail } = req.body;
+    const { recipientUserId } = req.body;
 
-    if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.includes('@')) {
-        return res.status(400).send('Valid recipient email is required.');
+    if (!recipientUserId) {
+        return res.status(400).send('Recipient user ID is required.');
     }
-
-    const trimmedRecipientEmail = recipientEmail.trim();
 
     const connection = await createConnection();
     try {
@@ -450,26 +607,36 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
             return res.status(403).send('You do not have permission to share this label.');
         }
 
-        // Find the recipient user by email
-        const [recipientRows] = await connection.query('SELECT UserID, FullName FROM Users WHERE Email = ?', [trimmedRecipientEmail]);
+        // Find the recipient user by user ID
+        const [recipientRows] = await connection.query('SELECT UserID, FullName, Email FROM Users WHERE UserID = ?', [recipientUserId]);
         if (recipientRows.length === 0) {
             return res.status(404).send('Recipient user not found.');
         }
 
-        const recipientUserId = recipientRows[0].UserID;
+        const recipientUser = recipientRows[0];
+
+        // Check if the label is already shared with the recipient
+        const [existingShare] = await connection.query(
+            'SELECT * FROM SharedLabels WHERE LabelID = ? AND RecipientUserID = ?',
+            [labelId, recipientUserId]
+        );
+
+        if (existingShare.length > 0) {
+            return res.status(400).send('This label has already been shared with the selected user.');
+        }
 
         const shareToken = crypto.randomBytes(16).toString('hex');
 
         await connection.query(
             'INSERT INTO SharedLabels (LabelID, ShareToken, RecipientEmail, RecipientUserID) VALUES (?, ?, ?, ?)',
-            [labelId, shareToken, trimmedRecipientEmail, recipientUserId]
+            [labelId, shareToken, recipientUser.Email, recipientUserId]
         );
 
         const shareLink = `http://localhost:1339/labels/view/${labelId}?token=${shareToken}`;
         const mailOptions = {
             from: process.env.EMAIL_USER,
-            to: trimmedRecipientEmail,
-            subject: `Label Shared with You: ${labelRows[0].LabelName}`,
+            to: recipientUser.Email,
+            subject: `Label Shared with You: ${labelRows[0].LabelName || 'Insurance Label'}`,
             text: `A label has been shared with you by ${req.user.FullName}. Click the link below to view it:\n\n${shareLink}`
         };
 
@@ -487,6 +654,7 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
         }
     }
 });
+
 
 router.get('/shared-labels', requireLogin, async (req, res) => {
     const userId = req.user.UserID;
@@ -873,5 +1041,38 @@ router.post('/admin/send-email', requireLogin, requireAdmin, async (req, res) =>
 
     res.redirect('/admin/users');
 });
+
+
+router.get('/insurance/view/:id', requireLogin, async (req, res) => {
+    const labelId = req.params.id;
+    const connection = await createConnection();
+
+    try {
+        const [insuranceLabel] = await connection.query('SELECT * FROM Labels WHERE LabelID = ? AND LabelOption = "insurance"', [labelId]);
+        const [insuranceItems] = await connection.query('SELECT * FROM InsuranceBoxItems WHERE LabelID = ?', [labelId]);
+
+        if (insuranceLabel.length === 0) {
+            return res.status(404).send('Insurance label not found.');
+        }
+
+        res.render('move_out/pages/insurance_view.ejs', {
+            title: `View Insurance Label: ${insuranceLabel[0].LabelName || 'Insurance Label'}`,
+            label: insuranceLabel[0],
+            items: insuranceItems,
+            user: req.user,
+            isAuthenticated: true
+        });
+    } catch (error) {
+        console.error('Error fetching insurance label:', error);
+        res.status(500).send('Error fetching insurance label.');
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
+    }
+});
+
+
+
 
 module.exports = router;
