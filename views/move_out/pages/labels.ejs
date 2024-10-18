@@ -16,18 +16,20 @@
                     <% if (labels.length > 0) { %>
                         <% labels.forEach(function(label) { %>
                             <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                                <div class="card text-center label-card">
+                                <div class="card text-center label-card position-relative">
                                     <div class="card-body p-0">
                                         <div class="label-image-container position-relative">
                                             <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
-            
+
+                                            <!-- Label Overlay with Name and Type -->
                                             <div class="label-overlay">
                                                 <h5 class="label-name"><%= label.LabelName %></h5>
                                                 <p class="label-type">
                                                     <%= label.LabelOption %> | <%= label.Status ? (label.Status.charAt(0).toUpperCase() + label.Status.slice(1)) : 'Private' %>
                                                 </p>
                                             </div>
-            
+
+                                            <!-- Label Hover Overlay with Buttons -->
                                             <div class="label-hover-overlay">
                                                 <div class="btn-group-vertical">
                                                     <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
@@ -40,33 +42,44 @@
                                                     <% } %>
                                                 </div>
                                             </div>
-            
-                                            <!-- Insurance logo display above the QR code -->
-                                            <% if (label.LabelOption === 'insurance' && label.insuranceLogo) { %>
-                                                <div class="insurance-logo-container text-center mb-2">
-                                                    <img src="/uploads/<%= label.insuranceLogo %>" alt="Insurance Logo" class="img-fluid insurance-logo" style="max-height: 80px;">
-                                                </div>
-                                            <% } %>
-            
-                                            <!-- QR code display -->
-                                            <div class="qr-code-container text-center mb-3">
+                                        </div>
+
+                                        <!-- Content Specific to Label Type -->
+                                        <% if (label.LabelOption !== 'insurance') { %>
+                                            <!-- Normal Labels: QR Code Positioned within the Card -->
+                                            <div class="qr-code-container-normal">
                                                 <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image">
                                             </div>
-            
-                                            <!-- Insurance items display with name and price -->
-                                            <% if (label.LabelOption === 'insurance' && label.insuranceItems && label.insuranceItems.length > 0) { %>
+                                        <% } else { %>
+                                            <!-- Insurance Labels: Display Items and Logos -->
+                                            <% if (label.insuranceItems && label.insuranceItems.length > 0) { %>
                                                 <div class="insurance-items-container mt-3 text-left">
                                                     <h6>Insurance Items:</h6>
                                                     <ul class="list-unstyled">
-                                                        <% label.insuranceItems.forEach(function(item) { %>
+                                                        <% var maxItemsToShow = 3; %>
+                                                        <% label.insuranceItems.slice(0, maxItemsToShow).forEach(function(item) { %>
                                                             <li>
                                                                 <strong><%= item.ItemName %></strong> - <%= item.ItemValue %> <%= item.Currency %>
                                                             </li>
                                                         <% }); %>
+                                                        <% if (label.insuranceItems.length > maxItemsToShow) { %>
+                                                            <li>And more items... <a href="/labels/view/<%= label.LabelID %>">View</a></li>
+                                                        <% } %>
                                                     </ul>
                                                 </div>
                                             <% } %>
-                                        </div>
+                                            <!-- Insurance Logo and QR Code at the Bottom -->
+                                            <div class="logo-qr-container mt-3 d-flex justify-content-between align-items-center">
+                                                <% if (label.insuranceLogo) { %>
+                                                    <div class="insurance-logo-container">
+                                                        <img src="/uploads/<%= label.insuranceLogo %>" alt="Insurance Logo" class="img-fluid insurance-logo">
+                                                    </div>
+                                                <% } %>
+                                                <div class="qr-code-container-insurance text-center">
+                                                    <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image-insurance">
+                                                </div>
+                                            </div>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>
@@ -76,7 +89,6 @@
                     <% } %>
                 </div>
             </div>
-            
         </div>
     </div>
 </div>
@@ -84,28 +96,16 @@
 <%- include("./../partials/footer.ejs") %>
 
 <script>
-    function validateAndSubmit(form) {
-        var recipientEmail = $('#recipientEmail').val();
-        if (!recipientEmail || recipientEmail.trim() === "") {
-            alert('Please select a recipient.');
-            return false; // Prevent form submission
-        }
-        console.log('Submitting form for sharing label with:', recipientEmail);
-        return true; // Proceed to submit the form
-    }
-
     $(document).ready(function() {
         // Trigger the share modal and set the action URL dynamically
         $('.share-button').on('click', function() {
             var labelId = $(this).data('label-id');
             var labelName = $(this).data('label-name');
 
-            console.log('Sharing label:', labelName, 'with ID:', labelId);
-
             $('#shareModalLabel').text('Share Label: ' + labelName);
-            $('#shareForm').attr('action', '/labels/share/' + labelId); // Update form action with label ID
+            $('#shareForm').attr('action', '/labels/share/' + labelId);
 
-            $('#shareModal').modal('show'); // Show the modal
+            $('#shareModal').modal('show');
         });
 
         // Confirm before deleting a label
@@ -113,12 +113,6 @@
             if (!confirm('Are you sure you want to delete this label? This action cannot be undone.')) {
                 event.preventDefault();
             }
-        });
-
-        // Log form submission for sharing a label
-        $('#shareForm').on('submit', function(event) {
-            console.log('Form action:', $(this).attr('action'));
-            console.log('Recipient email:', $('#recipientEmail').val());
         });
     });
 </script>

@@ -14,8 +14,20 @@
                 </div>
             <% } %>
 
+            <!-- Debugging output -->
+            <div class="debug-info">
+                <p><strong>Debug Info:</strong></p>
+                <ul>
+                    <li>Label Design: <%= labelDesign %></li>
+                    <li>Label Name: <%= labelName %></li>
+                    <li>Label Option: <%= labelOption %></li>
+                    <li>Status: <%= status %></li>
+                </ul>
+            </div>
+
             <div class="label-content-box-wrapper">
                 <form action="/create-label/submit" method="post" enctype="multipart/form-data">
+                    <!-- Hidden fields to pass data from Step 1 -->
                     <input type="hidden" name="labelDesign" value="<%= labelDesign %>">
                     <input type="hidden" name="labelName" value="<%= labelName %>">
                     <input type="hidden" name="labelOption" value="<%= labelOption %>">
@@ -71,6 +83,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Handle content type selection
         document.querySelectorAll('input[name="contentType"]').forEach(function(radio) {
             radio.addEventListener('change', function() {
                 document.querySelectorAll('.content-input').forEach(function(inputSection) {
@@ -92,6 +105,7 @@
             });
         });
 
+        // Image preview functionality
         document.getElementById('contentImages').addEventListener('change', function() {
             var preview = document.getElementById('imagePreview');
             preview.innerHTML = ''; 

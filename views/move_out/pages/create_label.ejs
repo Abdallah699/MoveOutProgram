@@ -73,17 +73,21 @@
                         </div>
 
                         <div id="insuranceItems">
-                            <div class="form-group">
-                                <label class="label-form-label"><strong>Item Name:</strong></label>
-                                <input type="text" class="form-control" name="itemNames[]" placeholder="Enter item name" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="label-form-label"><strong>Item Value:</strong></label>
-                                <input type="number" class="form-control" name="itemValues[]" placeholder="Enter item value" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="label-form-label"><strong>Currency:</strong></label>
-                                <input type="text" class="form-control" name="itemCurrencies[]" placeholder="Enter currency" required>
+                            <div class="insurance-item">
+                                <div class="form-group">
+                                    <label class="label-form-label"><strong>Item Name:</strong></label>
+                                    <input type="text" class="form-control" name="itemNames[]" placeholder="Enter item name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="label-form-label"><strong>Item Value:</strong></label>
+                                    <input type="number" class="form-control" name="itemValues[]" placeholder="Enter item value" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="label-form-label"><strong>Currency:</strong></label>
+                                    <input type="text" class="form-control" name="itemCurrencies[]" placeholder="Enter currency" required>
+                                </div>
+                                <button type="button" class="btn btn-danger removeItem">Remove Item</button>
+                                <hr>
                             </div>
                         </div>
                         <button type="button" class="btn btn-secondary" id="addItem">Add another item</button>
@@ -111,39 +115,68 @@
 <%- include("./../partials/footer.ejs") %>
 
 <script>
-    // Show insurance fields if insurance option is selected
-    $('input[name="labelOption"]').change(function () {
-        if ($(this).val() === 'insurance') {
-            $('#insuranceFields').show();
-        } else {
-            $('#insuranceFields').hide();
+    $(document).ready(function() {
+        // Function to update the state of insurance fields
+        function updateInsuranceFields() {
+            const selectedOption = $('input[name="labelOption"]:checked').val();
+            if (selectedOption === 'insurance') {
+                $('#insuranceFields').show();
+                // Set required attributes for insurance fields
+                $('#insuranceFields').find('input').attr('required', true);
+            } else {
+                $('#insuranceFields').hide();
+                // Remove required attributes when hidden
+                $('#insuranceFields').find('input').removeAttr('required');
+                // Clear values when hidden
+                $('#insuranceFields').find('input').val('');
+            }
         }
-    });
 
-    // Add more items for insurance label
-    $('#addItem').click(function () {
-        const itemHTML = `
-            <div class="form-group">
-                <label class="label-form-label"><strong>Item Name:</strong></label>
-                <input type="text" class="form-control" name="itemNames[]" placeholder="Enter item name" required>
-            </div>
-            <div class="form-group">
-                <label class="label-form-label"><strong>Item Value:</strong></label>
-                <input type="number" class="form-control" name="itemValues[]" placeholder="Enter item value" required>
-            </div>
-            <div class="form-group">
-                <label class="label-form-label"><strong>Currency:</strong></label>
-                <input type="text" class="form-control" name="itemCurrencies[]" placeholder="Enter currency" required>
-            </div>`;
-        $('#insuranceItems').append(itemHTML);
-    });
+        // Show insurance fields if insurance option is selected
+        $('input[name="labelOption"]').change(function () {
+            updateInsuranceFields();
+        });
 
-    // Conditionally change form action based on label option selection
-    $('#createLabelForm').on('submit', function (e) {
-        const selectedOption = $('input[name="labelOption"]:checked').val();
-        if (selectedOption === 'insurance') {
-            // Change the form action to skip step 2 for insurance labels
-            $('#createLabelForm').attr('action', '/create-label/submit');
-        }
+        // Add more items for insurance label
+        $('#addItem').click(function () {
+            const itemHTML = `
+                <div class="insurance-item">
+                    <div class="form-group">
+                        <label class="label-form-label"><strong>Item Name:</strong></label>
+                        <input type="text" class="form-control" name="itemNames[]" placeholder="Enter item name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="label-form-label"><strong>Item Value:</strong></label>
+                        <input type="number" class="form-control" name="itemValues[]" placeholder="Enter item value" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="label-form-label"><strong>Currency:</strong></label>
+                        <input type="text" class="form-control" name="itemCurrencies[]" placeholder="Enter currency" required>
+                    </div>
+                    <button type="button" class="btn btn-danger removeItem">Remove Item</button>
+                    <hr>
+                </div>`;
+            $('#insuranceItems').append(itemHTML);
+        });
+
+        // Remove insurance item
+        $(document).on('click', '.removeItem', function () {
+            $(this).closest('.insurance-item').remove();
+        });
+
+        // Initialize the form
+        updateInsuranceFields();
+
+        // Conditionally change form action based on label option selection
+        $('#createLabelForm').on('submit', function (e) {
+            const selectedOption = $('input[name="labelOption"]:checked').val();
+            if (selectedOption === 'insurance') {
+                // Change the form action to skip step 2 for insurance labels
+                $(this).attr('action', '/create-label/submit');
+            } else {
+                // Ensure the form action is set to step2 for normal labels
+                $(this).attr('action', '/create-label/step2');
+            }
+        });
     });
 </script>

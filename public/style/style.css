@@ -159,11 +159,7 @@ footer {
 /* Label Image and Overlay Styles */
 .label-image-container {
     position: relative;
-    margin-top: 20px;
     width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .label-image {
@@ -172,11 +168,10 @@ footer {
     border-radius: 10px;
 }
 
-/* Updated .label-overlay Styles */
 .label-overlay {
     position: absolute;
     top: 0; /* Position at the top */
-    left: 5;
+    left: 20px;
     width: 80%;
     color: #fff;
     text-align: center;
@@ -192,7 +187,7 @@ footer {
 }
 
 .label-type {
-    font-size: 1.2rem;
+    font-size: 1rem;
     margin: 5px 0 0;
     font-weight: normal;
 }
@@ -245,6 +240,8 @@ footer {
 /* Buttons and Form Styles */
 .btn-group-toggle .btn {
     margin-right: 10px;
+    padding: 10px 20px;
+    font-size: 1.1rem;
 }
 
 .btn-outline-primary {
@@ -278,6 +275,7 @@ button.btn-primary:hover {
     border: 1px solid #ddd;
     border-radius: 5px;
     background-color: #f9f9f9;
+    margin-top: 10px;
 }
 
 .content-input {
@@ -297,16 +295,20 @@ textarea.form-control {
     resize: none;
 }
 
-.qr-code-container {
-    background: none; /* Make sure the container has no background */
-}
+/* .qr-code-container {
+    background: none;
+    padding: 10px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    margin-top: -190px !important;
+} */
 
 .qr-code-container img {
-    max-width: 200px; /* Adjust size as needed */
-    background-color: transparent; /* Ensure the QR code image has a transparent background */
-    border: none; /* Remove any border */
+    max-width: 80px;
+    background-color: transparent !important;
+    border: none;
 }
-
 
 /* Hide hover buttons initially */
 .label-hover-overlay {
@@ -315,7 +317,7 @@ textarea.form-control {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.7); /* Adjusted to 0.7 opacity */
     opacity: 0;
     transition: opacity 0.3s ease;
     z-index: 2;
@@ -339,75 +341,22 @@ textarea.form-control {
 /* Buttons styling */
 .label-hover-overlay .btn {
     margin: 5px 0;
-    width: 100px;
+    width: 120px;
     transition: all 0.3s ease;
 }
 
 /* Card hover effect */
 .label-card {
     transition: transform 0.3s ease;
+    border: 1px solid #ffffff;
+    border-radius: 10px;
 }
 
 .label-card:hover {
     transform: scale(1.05); /* Slight zoom effect */
 }
 
-/* Label Image and Overlay Styles */
-.label-image-container {
-    position: relative;
-    margin-top: 20px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.label-image {
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-}
-
-/* Updated .label-overlay Styles */
-.label-overlay {
-    position: absolute;
-    top: 0;
-    left: 5;
-    width: 80%;
-    color: #fff;
-    text-align: center;
-    padding: 10px;
-    z-index: 1;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-}
-
-.label-name {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin: 0;
-}
-
-.label-type {
-    font-size: 1.2rem;
-    margin: 5px 0 0;
-    font-weight: normal;
-}
-
-/* QR code container styling */
-.qr-code-container {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: none;
-}
-
-.qr-code-container img {
-    max-width: 100px;
-    background-color: transparent !important;
-    border: none;
-}
-
+/* Text Content Carousel */
 .text-content-carousel {
     height: 300px; /* Adjust height as needed */
     display: flex;
@@ -440,7 +389,6 @@ textarea.form-control {
     margin-right: 5px;
 }
 
-
 /* Carousel and Slider Styles for Edit Label */
 .edit-label-carousel .carousel-fixed-height {
     height: 500px;
@@ -453,27 +401,12 @@ textarea.form-control {
     height: 100%;
 }
 
-.edit-label-carousel .carousel-fixed-height .carousel-item {
+.edit-label-carousel .carousel-item {
     height: 100%;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.edit-label-carousel .carousel-fixed-height img,
-.edit-label-carousel .text-content-carousel,
-.edit-label-carousel .audio-content-carousel {
-    max-height: 100%;
-    max-width: 100%;
-    object-fit: contain;
-}
-
-.edit-label-carousel .text-content-carousel,
-.edit-label-carousel .audio-content-carousel {
-    width: 100%;
-    text-align: center;
-    padding: 20px;
 }
 
 .edit-label-carousel .carousel-text {
@@ -530,7 +463,6 @@ textarea.form-control {
     margin-right: 10px;  /* Adds space to the right of the image */
 }
 
-
 /* Label Details Page Specific Styles */
 .label-details-container {
     background-color: #f5f5f5;
@@ -572,20 +504,66 @@ textarea.form-control {
     font-weight: bold;
 }
 
-.qr-code-container {
-    padding: 20px;
+/* QR code container styling */
+/* General QR Code Container Styles */
+.qr-code-container-normal{
+    padding: 5px;
     background-color: #fff;
     border: 1px solid #007BFF;
     border-radius: 10px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    width: 150px;
+    height: 150px;
     display: inline-block;
-    margin-top: 20px;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-.qr-code-image {
-    max-width: 150px;
-    margin-bottom: 15px;
+
+
+
+
+
+
+
+.qr-code-container-insurance {
+    padding: 5px;
+    background-color: #fff;
+    border: 1px solid #007BFF;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    width: 80px;
+    height: 80px;
+    display: inline-block;
+    position: absolute;
+    bottom: 50px;
+    left: 65%;
+    transform: translateX(-50%);
 }
+
+/* Insurance Labels Specific QR Code Styling */
+.qr-code-container-insurance {
+    border: 2px solid #FF0000;  /* Different border color to distinguish */
+}
+
+/* QR Code Image Size */
+.qr-code-image,
+.qr-code-image-insurance {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Insurance Logo */
+.insurance-logo-container {
+    margin-right: 10px;  /* Add spacing between insurance logo and QR code */
+    margin-left: 30px;
+}
+
+
+
 
 .print-btn {
     background-color: #212529;
@@ -651,22 +629,7 @@ textarea.form-control {
     color: #444;
 }
 
-/* General Styles */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #fff;
-    margin: 0;
-    padding: 0;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-.container {
-    margin-top: 50px;
-}
-
+/* Account Settings Styles */
 .account-settings-container {
     background-color: #f5f5f5;
     padding: 30px;
@@ -684,10 +647,6 @@ body {
     font-weight: 700;
     color: #0056b3;
     margin-bottom: 25px;
-}
-
-.text-center {
-    text-align: center;
 }
 
 /* Box Wrapper */
@@ -720,26 +679,11 @@ body {
     height: 150px;
     object-fit: cover;
     border: 3px solid #ddd;
-}
-
-.form-control-file {
     margin-top: 10px;
 }
 
 /* Button Styles */
-.btn-update-picture {
-    background-color: #007BFF;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 20px;
-    color: #fff;
-    transition: background-color 0.3s ease;
-}
-
-.btn-update-picture:hover {
-    background-color: #0056b3;
-}
-
+.btn-update-picture,
 .btn-update-password {
     background-color: #007BFF;
     border: none;
@@ -749,6 +693,7 @@ body {
     transition: background-color 0.3s ease;
 }
 
+.btn-update-picture:hover,
 .btn-update-password:hover {
     background-color: #0056b3;
 }
@@ -823,64 +768,11 @@ body {
     margin-top: 30px;
 }
 
-.label-card {
-    transition: transform 0.3s ease;
-    border: 1px solid #ffffff;
-    border-radius: 10px;
-}
-
-.label-card:hover {
-    transform: scale(1.05); /* Slight zoom effect */
-}
-
-.qr-code-container {
-    padding: 15px;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-    margin-top: 15px;
-    display: inline-block;
-}
-
-.qr-code-image {
-    max-width: 80px;
-    background-color: transparent !important;
-    border: none;
-}
-
-/* Button group styles */
 .label-hover-overlay .btn-group-vertical {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
-/* Hover button styles */
-.label-hover-overlay .btn {
-    margin: 5px 0;
-    width: 120px;
-    transition: all 0.3s ease;
-}
-
-.label-hover-overlay {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.label-image-container:hover .label-hover-overlay {
-    opacity: 1;
-}
-
 
 /* Create Label Page Styles */
 .create-label-container {
@@ -914,6 +806,8 @@ body {
     color: #0056b3;
     font-weight: bold;
     margin-bottom: 10px;
+    display: block;
+    text-align: left;
 }
 
 .carousel-image {
@@ -963,8 +857,6 @@ body {
     background-color: #0056b3;
 }
 
-
-
 /* Add Label Content Page Styles */
 .add-label-content-container {
     background-color: #f5f5f5;
@@ -998,25 +890,6 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.label-form-label {
-    font-size: 1.2rem;
-    color: #0056b3;
-    font-weight: bold;
-    margin-bottom: 10px;
-    display: block;
-    text-align: left;
-}
-
-.btn-group-toggle .btn {
-    margin-right: 10px;
-    padding: 10px 20px;
-    font-size: 1.1rem;
-}
-
-.content-input {
-    margin-top: 30px;
-}
-
 .form-control-lg {
     padding: 15px;
     font-size: 1.2rem;
@@ -1041,22 +914,6 @@ body {
 .image-preview:hover {
     transform: scale(1.05);
 }
-
-.continue-btn {
-    background-color: #007BFF;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 20px;
-    font-size: 1.1rem;
-    transition: background-color 0.3s ease;
-}
-
-.continue-btn:hover {
-    background-color: #0056b3;
-}
-
-
 
 /* Edit Label Page Specific Styles */
 .edit-label-container {
@@ -1085,21 +942,6 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.label-form-label {
-    font-size: 1.2rem;
-    color: #0056b3;
-    font-weight: bold;
-    margin-bottom: 10px;
-    display: block;
-    text-align: left;
-}
-
-.form-control-lg {
-    padding: 15px;
-    font-size: 1.2rem;
-    border-radius: 6px;
-}
-
 .update-btn {
     background-color: #007BFF;
     color: #fff;
@@ -1114,56 +956,122 @@ body {
     background-color: #0056b3;
 }
 
-.edit-label-carousel .carousel-fixed-height {
-    height: 500px;
-    overflow: hidden;
-    background-color: #f8f9fa;
-    position: relative;
+/* Logo and QR Container */
+.logo-qr-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* Add spacing between the logo and QR code */
+    margin-bottom: 20px; /* Spacing below the container */
 }
 
-.edit-label-carousel .carousel-fixed-height .carousel-inner {
-    height: 100%;
+/* Insurance logo styling */
+.insurance-logo-container {
+    display: inline-block;
+    max-width: 80px;
+    max-height: 80px;
 }
 
-.edit-label-carousel .carousel-item {
+.insurance-logo-container img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    margin-top: -160px;
+    position: sticky;
+    margin-left: 10px;
+}
+
+.qr-code-container-inside {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-5%);
+    z-index: 2;
+}
+
+.qr-code-container-inside {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.logo-qr-container-inside {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 2;
+}
+
+
+.insurance-logo-container-inside {
+    max-width: 60px;
+}
+
+.insurance-logo-inside {
+    max-height: 60px;
+    border-radius: 5px;
+}
+
+/* Insurance Items Container */
+.insurance-items-container {
+    margin-top: 10px;
+}
+
+.insurance-items-container h6 {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.insurance-items-container ul {
+    padding-left: 15px;
+    margin-bottom: 0;
+}
+
+.insurance-items-container li {
+    margin-bottom: 3px;
+    font-size: 0.9rem;
+}
+
+/* Label Hover Overlay */
+.label-hover-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
-    position: relative;
+    background: rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 3;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.edit-label-carousel .carousel-text {
-    font-size: 1.5em;
-    color: #333;
-}
-
-.edit-label-carousel .delete-button {
-    position: absolute;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0.8;
-    cursor: pointer;
-}
-
-.edit-label-carousel .delete-button:hover {
+.label-image-container:hover .label-hover-overlay {
     opacity: 1;
 }
 
-.edit-label-carousel .delete-button i {
-    margin-right: 5px;
+.label-hover-overlay .btn-group-vertical .btn {
+    margin: 5px 0;
+    width: 120px;
 }
 
-.edit-label-carousel .carousel-control-prev,
-.edit-label-carousel .carousel-control-next {
-    width: auto;
-    background-image: none;
-    opacity: 1;
-    color: #333;
-    top: 50%;
-    transform: translateY(-50%);
+/* Adjustments for the Card */
+.label-card {
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
 }
 
-
-
+.label-card:hover {
+    transform: scale(1.05);
+}

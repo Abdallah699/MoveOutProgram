@@ -29,6 +29,8 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         if (file.fieldname === 'profilePicture') {
             cb(null, path.join(__dirname, '../public/uploads/profile_pictures'));
+        } else if (file.fieldname === 'insuranceLogo') {
+            cb(null, path.join(__dirname, '../public/uploads'));
         } else {
             cb(null, path.join(__dirname, '../public/uploads'));
         }
@@ -41,7 +43,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        if (file.fieldname === 'profilePicture' || file.fieldname === 'contentImages') {
+        if (['profilePicture', 'contentImages', 'insuranceLogo'].includes(file.fieldname)) {
             if (!file.mimetype.match(/image\/(jpeg|png|gif|bmp)/)) {
                 return cb(new Error('Only image files are allowed!'), false);
             }
@@ -54,6 +56,8 @@ const upload = multer({
         cb(null, true);
     }
 });
+
+const parseForm = multer(); // For parsing multipart/form-data without files
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -148,7 +152,7 @@ router.get("/welcome", requireLogin, (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-    req.logout(function(err) {
+    req.logout(function (err) {
         if (err) { return next(err); }
         res.redirect('/login');
     });
@@ -176,13 +180,50 @@ router.get("/create-label", requireLogin, (req, res) => {
     });
 });
 
+// Updated /create-label/step2 route to parse form data
+router.post("/create-label/step2", requireLogin, parseForm.none(), (req, res) => {
+    const { labelDesign, labelName, labelOption, status } = req.body;
+
+    console.log("Form data received in step2:", req.body);
+
+    if (typeof labelName === 'string' && labelName.trim().length > 10) {
+        return res.status(400).render("move_out/pages/create_label.ejs", {
+            errorMessage: "Label name cannot be longer than 10 characters.",
+            title: "Create Label",
+            labelModels: JSON.parse(fs.readFileSync(path.join(__dirname, '../config/labelModels.json'), 'utf-8')),
+            isAuthenticated: !!req.user,
+            user: req.user
+        });
+    }
+
+    if (labelOption === 'insurance') {
+        // For insurance labels, skip to submit route
+        res.redirect(307, '/create-label/submit');
+    } else {
+        res.render('move_out/pages/label-content.ejs', {
+            labelDesign,
+            labelName,
+            labelOption,
+            status,
+            title: "Add Content",
+            errorMessage: null,
+            isAuthenticated: !!req.user,
+            user: req.user
+        });
+    }
+});
+
+// Updated /create-label/submit route
 router.post('/create-label/submit', requireLogin, upload.fields([
     { name: 'contentImages', maxCount: 5 },
     { name: 'contentAudio', maxCount: 1 },
-    { name: 'insuranceLogo', maxCount: 1 } // Add insuranceLogo to file upload
+    { name: 'insuranceLogo', maxCount: 1 }
 ]), async (req, res) => {
     const { labelDesign, labelName, labelOption, contentType, contentText, status, itemNames, itemValues, itemCurrencies } = req.body;
     const userId = req.user.UserID;
+
+    console.log('Form data received in submit:', req.body);
+    console.log('Files received:', req.files);
 
     let contentData = {};
 
@@ -196,7 +237,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
         contentData = { type: 'image', data: imageFiles };
     }
 
-    // Insert the label into the database
     const connection = await createConnection();
     try {
         await connection.query(
@@ -204,17 +244,13 @@ router.post('/create-label/submit', requireLogin, upload.fields([
             [userId, labelDesign, labelName, labelOption, status]
         );
 
-        // Get the newly inserted LabelID
         const [result] = await connection.query('SELECT LAST_INSERT_ID() AS LabelID');
         const labelId = result[0].LabelID;
 
-        // If it's an insurance label, store the insurance items
         if (labelOption === 'insurance') {
             const insuranceLogo = req.files['insuranceLogo'] ? req.files['insuranceLogo'][0].filename : null;
 
-            // Ensure itemNames, itemValues, and itemCurrencies are defined and are arrays
             if (Array.isArray(itemNames) && Array.isArray(itemValues) && Array.isArray(itemCurrencies)) {
-                // Loop through each item and insert it into InsuranceBoxItems table
                 for (let i = 0; i < itemNames.length; i++) {
                     await connection.query(
                         'INSERT INTO InsuranceBoxItems (LabelID, ItemName, ItemValue, Currency) VALUES (?, ?, ?, ?)',
@@ -223,7 +259,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
                 }
             }
 
-            // Save the insurance company logo in LabelContents if provided
             if (insuranceLogo) {
                 await connection.query(
                     'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
@@ -232,7 +267,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
             }
         }
 
-        // Save the rest of the content (text/audio/images)
         if (contentData.type === 'text') {
             await connection.query(
                 'INSERT INTO LabelContents (LabelID, ContentType, ContentText) VALUES (?, ?, ?)',
@@ -262,7 +296,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
         }
     }
 });
-
 
 router.get('/labels', requireLogin, async (req, res) => {
     const connection = await createConnection();
@@ -302,67 +335,6 @@ router.get('/labels', requireLogin, async (req, res) => {
         }
     }
 });
-
-
-
-
-
-
-
-router.post("/create-label/step2", requireLogin, (req, res) => {
-    const { labelDesign, labelName, labelOption, status, itemNames, itemValues, itemCurrencies } = req.body;
-
-    // Log form submission data for debugging
-    console.log("Form data received:", req.body);
-
-    // Ensure labelName exists and is a string before checking its length
-    if (typeof labelName === 'string' && labelName.trim().length > 10) {
-        return res.status(400).render("move_out/pages/create_label.ejs", {
-            errorMessage: "Label name cannot be longer than 10 characters.",
-            title: "Create Label",
-            labelModels: JSON.parse(fs.readFileSync(path.join(__dirname, '../config/labelModels.json'), 'utf-8')),
-            isAuthenticated: !!req.user,
-            user: req.user
-        });
-    }
-
-    // If the label option is "insurance", handle final submission here without going to step 2
-    if (labelOption === 'insurance') {
-        console.log("Insurance selected. Item Names:", itemNames);
-        console.log("Item Values:", itemValues);
-        console.log("Item Currencies:", itemCurrencies);
-
-        // Check if the insurance data fields are valid
-        if (!itemNames || !itemValues || !itemCurrencies || !Array.isArray(itemNames) || !Array.isArray(itemValues) || !Array.isArray(itemCurrencies)) {
-            return res.status(400).render("move_out/pages/create_label.ejs", {
-                errorMessage: "Insurance label requires item names, values, and currencies.",
-                title: "Create Label",
-                labelModels: JSON.parse(fs.readFileSync(path.join(__dirname, '../config/labelModels.json'), 'utf-8')),
-                isAuthenticated: !!req.user,
-                user: req.user
-            });
-        }
-
-        // Skip step 2 and directly call the final label submission logic
-        return res.redirect('/create-label/submit');  // Direct to label submission route
-    }
-
-    // For non-insurance labels, proceed to step two for content
-    res.render('move_out/pages/label-content.ejs', {
-        labelDesign,
-        labelName,
-        labelOption,
-        status,
-        title: "Add Content",
-        errorMessage: null,
-        isAuthenticated: !!req.user,
-        user: req.user
-    });
-});
-
-
-
-
 
 router.get('/labels/view/:id', requireLogin, canViewLabel, async (req, res) => {
     const label = req.label;
@@ -441,7 +413,7 @@ router.post('/labels/edit/:id', requireLogin, upload.fields([
     }
 
     if (contentType === 'text' && contentText) {
-        await connection.query('INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+        await connection.query('INSERT INTO LabelContents (LabelID, ContentType, ContentText) VALUES (?, ?, ?)',
             [labelId, 'text', contentText]);
     } else if (contentType === 'image') {
         const newImages = req.files['contentImages'] || [];
@@ -461,52 +433,37 @@ router.post('/labels/edit/:id', requireLogin, upload.fields([
 });
 
 router.post('/labels/share/:id', requireLogin, async (req, res) => {
-    console.log('Received POST /labels/share/:id');
-    console.log('req.params:', req.params);
-    console.log('req.body:', req.body);
-    console.log('req.user:', req.user);
-
     const labelId = req.params.id;
     const userId = req.user.UserID;
     const { recipientEmail } = req.body;
 
-    console.log('Received recipientEmail:', recipientEmail);
-    console.log('Type of recipientEmail:', typeof recipientEmail);
-
     if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.includes('@')) {
-        console.log('Invalid recipient email:', recipientEmail);
         return res.status(400).send('Valid recipient email is required.');
     }
 
     const trimmedRecipientEmail = recipientEmail.trim();
-    console.log('Trimmed recipientEmail:', trimmedRecipientEmail);
 
     const connection = await createConnection();
     try {
         const [labelRows] = await connection.query('SELECT * FROM Labels WHERE LabelID = ? AND UserID = ?', [labelId, userId]);
         if (labelRows.length === 0) {
-            console.log('Label not found or user does not have permission.');
             return res.status(403).send('You do not have permission to share this label.');
         }
 
         // Find the recipient user by email
         const [recipientRows] = await connection.query('SELECT UserID, FullName FROM Users WHERE Email = ?', [trimmedRecipientEmail]);
         if (recipientRows.length === 0) {
-            console.log('Recipient user not found.');
             return res.status(404).send('Recipient user not found.');
         }
 
         const recipientUserId = recipientRows[0].UserID;
-        console.log('Recipient UserID:', recipientUserId);
 
         const shareToken = crypto.randomBytes(16).toString('hex');
-        console.log('Generated share token:', shareToken);
 
         await connection.query(
             'INSERT INTO SharedLabels (LabelID, ShareToken, RecipientEmail, RecipientUserID) VALUES (?, ?, ?, ?)',
             [labelId, shareToken, trimmedRecipientEmail, recipientUserId]
         );
-        console.log('SharedLabels insert success');
 
         const shareLink = `http://localhost:1339/labels/view/${labelId}?token=${shareToken}`;
         const mailOptions = {
@@ -516,19 +473,11 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
             text: `A label has been shared with you by ${req.user.FullName}. Click the link below to view it:\n\n${shareLink}`
         };
 
-        console.log('Attempting to send email with options:', JSON.stringify(mailOptions, null, 2));
-        try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log('Email sent successfully. Response:', JSON.stringify(info, null, 2));
-        } catch (emailError) {
-            console.error('Error sending email:', emailError);
-            throw emailError;
-        }
+        await transporter.sendMail(mailOptions);
 
         return res.redirect('/labels');
     } catch (error) {
         console.error('Error sharing label or sending email:', error);
-        console.error('Error stack:', error.stack);
         if (!res.headersSent) {
             return res.status(500).send('Error sharing label or sending email.');
         }
@@ -538,7 +487,6 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
         }
     }
 });
-
 
 router.get('/shared-labels', requireLogin, async (req, res) => {
     const userId = req.user.UserID;
@@ -552,8 +500,6 @@ router.get('/shared-labels', requireLogin, async (req, res) => {
             JOIN Users u ON l.UserID = u.UserID
             WHERE sl.RecipientUserID = ?
         `, [userId]);
-
-        console.log('Fetched shared labels:', sharedLabels);
 
         const qrCodes = {};
         for (const label of sharedLabels) {
@@ -583,7 +529,6 @@ router.get('/shared-labels', requireLogin, async (req, res) => {
         }
     }
 });
-
 
 router.get('/phonebook', requireLogin, async (req, res) => {
     const searchQuery = req.query.search || '';
@@ -616,7 +561,6 @@ router.get('/phonebook', requireLogin, async (req, res) => {
         }
     }
 });
-
 
 router.get('/users/:userId/labels', async (req, res) => {
     const userId = req.params.userId;
@@ -703,8 +647,9 @@ router.post("/account/update", requireLogin, async (req, res) => {
     let updateFields = { Username: username };
 
     if (!req.user.GoogleID && password) {
-        const hashedPassword = hashPassword(password);
+        const { hashedPassword, salt } = await hashPassword(password);
         updateFields.PasswordHash = hashedPassword;
+        updateFields.Salt = salt;
     }
 
     const db = require('../config/sql');
@@ -766,7 +711,7 @@ router.post('/account/update-password', requireLogin, async (req, res) => {
         });
     }
 
-    const { salt, hashedPassword } = await hashPassword(newPassword);
+    const { hashedPassword, salt } = await hashPassword(newPassword);
 
     await db.query('UPDATE Users SET PasswordHash = ?, Salt = ? WHERE UserID = ?', [hashedPassword, salt, userId]);
 
