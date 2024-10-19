@@ -118,40 +118,33 @@ router.post("/verify-code", async (req, res) => {
 
 
 
-router.post("/login", async (req, res) => {
-    const { email, password } = req.body;
-    const result = await loginUser(email, password);
-
-    if (result.success) {
-        req.session.user = {
-            UserID: result.user.UserID,
-            FullName: result.user.FullName,
-            Email: result.user.Email,
-            EmailVerified: result.user.EmailVerified,
-            AdminLevel: result.user.AdminLevel // Make sure AdminLevel is set correctly
-        };
-
-        console.log("Session data after login:", req.session.user);
-
-        const sessionToken = crypto.randomBytes(32).toString("hex");
-        const db = require("../config/sql");
-
-        await db.query(
-            'INSERT INTO Sessions (UserID, SessionToken, ExpiresAt) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))',
-            [result.user.UserID, sessionToken]
-        );
-
-        res.cookie('sessionToken', sessionToken, { httpOnly: true });
-
+// routes.js
+router.post('/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        console.error('Error in authentication:', err);
+        return next(err);
+      }
+      if (!user) {
+        return res.status(400).render("move_out/pages/login.ejs", {
+          errorMessage: info ? info.message : 'Invalid credentials',
+          message: null,
+          title: "Login"
+        });
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('Error logging in user:', err);
+          return next(err);
+        }
+        console.log("Session data after login:", req.session);
+  
         return res.redirect("/welcome");
-    }
-
-    res.status(400).render("move_out/pages/login.ejs", {
-        errorMessage: result.message,
-        message: null,
-        title: "Login"
-    });
-});
+      });
+    })(req, res, next);
+  });
+  
+  
 
 
 
@@ -1006,7 +999,7 @@ router.get('/admin/dashboard', requireLogin, requireAdmin, async (req, res) => {
 router.get('/admin/users', requireLogin, requireAdmin, async (req, res) => {
     const db = require('../config/sql');
 
-    const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, Admin, IsDeactivated FROM Users');
+    const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, AdminLevel, IsDeactivated FROM Users');
 
     res.render('admin/users', {
         title: 'All Users',

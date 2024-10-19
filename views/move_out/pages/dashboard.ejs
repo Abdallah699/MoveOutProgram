@@ -21,32 +21,46 @@
                     <td><%= user.FullName %></td>
                     <td><%= user.Email %></td>
                     <td><img src="<%= user.ProfilePicture %>" alt="Profile Picture" style="width: 50px; height: 50px;"></td>
+                    
+                    <!-- Role change options based on the current user's AdminLevel -->
                     <td>
-                        <% if (locals.user.AdminLevel === 2 && locals.user.UserID !== user.UserID) { %> <!-- Super Admin can change others' roles but not their own -->
+                        <% if (user.UserID !== locals.user.UserID && locals.user.AdminLevel === 2) { %>
+                            <!-- Super admin can change others' roles but not assign level 2 to others -->
                             <form action="/admin/users/<%= user.UserID %>/update-role" method="POST" style="display:inline;">
                                 <select name="AdminLevel" class="form-control form-control-sm">
                                     <option value="0" <%= user.AdminLevel === 0 ? 'selected' : '' %>>User</option>
                                     <option value="1" <%= user.AdminLevel === 1 ? 'selected' : '' %>>Admin</option>
-                                    <option value="2" <%= user.AdminLevel === 2 ? 'selected' : '' %>>Super Admin</option>
+                                    <!-- Disable level 2 for others if the current user is also admin level 2 -->
+                                    <% if (locals.user.AdminLevel > user.AdminLevel) { %>
+                                        <option value="2" disabled><%= user.AdminLevel === 2 ? 'Super Admin' : '' %></option>
+                                    <% } %>
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-info mt-1">Update</button>
                             </form>
-                        <% } else if (locals.user.AdminLevel === 2 && locals.user.UserID === user.UserID) { %> <!-- Super Admin cannot change their own role -->
-                            <span>Super Admin (Cannot change own role)</span>
+                        <% } else if (user.UserID === locals.user.UserID) { %>
+                            <span>You cannot change your own role</span>
                         <% } else { %>
-                            <span><%= user.AdminLevel === 0 ? 'User' : user.AdminLevel === 1 ? 'Admin' : 'Super Admin' %></span>
+                            <%= user.AdminLevel === 0 ? 'User' : (user.AdminLevel === 1 ? 'Admin' : 'Super Admin') %>
                         <% } %>
                     </td>
+                    
+                    <!-- Display user status -->
                     <td><%= user.IsDeactivated ? 'Deactivated' : 'Active' %></td>
+
+                    <!-- Action buttons for activating/deactivating -->
                     <td>
-                        <% if (locals.user.AdminLevel === 2 && locals.user.UserID !== user.UserID) { %> <!-- Super Admin can toggle other users' activation -->
+                        <% if (locals.user.AdminLevel >= 1 && user.UserID !== locals.user.UserID && user.AdminLevel <= locals.user.AdminLevel) { %>
+                            <!-- Admin level 1 and 2 can activate/deactivate users with the same or lower admin level -->
                             <form action="/admin/users/<%= user.UserID %>/toggle" method="POST" style="display:inline;">
                                 <button class="btn btn-sm <%= user.IsDeactivated ? 'btn-success' : 'btn-warning' %>">
                                     <%= user.IsDeactivated ? 'Activate' : 'Deactivate' %>
                                 </button>
                             </form>
-                        <% } else if (locals.user.AdminLevel === 2 && locals.user.UserID === user.UserID) { %> <!-- Super Admin cannot deactivate themselves -->
-                            <span>Cannot change own status</span>
+                        <% } else if (user.AdminLevel > locals.user.AdminLevel) { %>
+                            <!-- If target user has a higher admin level, no action is allowed -->
+                            <span>Insufficient permissions</span>
+                        <% } else if (user.UserID === locals.user.UserID) { %>
+                            <span>You cannot deactivate your own account</span>
                         <% } %>
                     </td>
                 </tr>
@@ -55,7 +69,7 @@
     </table>
 
     <h2>Send Marketing Email</h2>
-    <form action="/admin/send-marketing-email" method="POST">
+    <form action="/admin/send-email" method="POST">
         <div class="form-group">
             <label for="emailSubject">Email Subject:</label>
             <input type="text" class="form-control" id="emailSubject" name="emailSubject" required>

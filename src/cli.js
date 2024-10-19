@@ -72,8 +72,8 @@ async function registerUser(email, password, fullName) {
     await sendVerificationEmail(email, verificationCode);
 
     await connection.query(
-        'INSERT INTO Users (Email, PasswordHash, Salt, FullName, EmailVerified, VerificationCode, VerificationExpiresAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [email, hashedPassword, salt, fullName, emailVerified, verificationCode, verificationExpiresAt]
+        'INSERT INTO Users (Email, PasswordHash, Salt, FullName, EmailVerified, VerificationCode, VerificationExpiresAt, AdminLevel) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [email, hashedPassword, salt, fullName, emailVerified, verificationCode, verificationExpiresAt, 0] // Regular users get AdminLevel 0
     );
 
     connection.end();
@@ -112,7 +112,6 @@ async function verifyEmail(email, verificationCode) {
     return { success: true, message: 'Email verified successfully!' };
 }
 
-
 async function loginUser(email, password) {
     const connection = await createConnection();
     
@@ -145,23 +144,21 @@ async function loginUser(email, password) {
 
     connection.end();
 
-    // Ensure AdminLevel is passed for session
-    return {
-        success: true,
-        message: 'Login successful!',
-        user: {
-            UserID: userData.UserID,
-            FullName: userData.FullName,
-            Email: userData.Email,
-            EmailVerified: userData.EmailVerified,
-            AdminLevel: userData.AdminLevel  // Make sure this is included
-        }
-    };
+// cli.js
+return {
+    success: true,
+    message: 'Login successful!',
+    user: {
+      UserID: userData.UserID,
+      FullName: userData.FullName,
+      Email: userData.Email,
+      EmailVerified: userData.EmailVerified,
+      AdminLevel: userData.AdminLevel,  // Ensure AdminLevel is included
+      // Include any other necessary fields
+    }
+  };
+  
 }
-
-
-
-
 
 
 async function sendPasswordResetConfirmation(email) {
@@ -220,8 +217,8 @@ async function findOrCreateUserByGoogleId(profile) {
         }
 
         const [result] = await connection.query(
-            'INSERT INTO Users (Email, FullName, Username, EmailVerified, GoogleID, ProfilePicture) VALUES (?, ?, ?, ?, ?, ?)',
-            [email, fullName, sanitizedUsername, true, googleId, '/uploads/profile_pictures/default.png']
+            'INSERT INTO Users (Email, FullName, Username, EmailVerified, GoogleID, ProfilePicture, AdminLevel) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [email, fullName, sanitizedUsername, true, googleId, '/uploads/profile_pictures/default.png', 0]  // Google users start as regular users
         );
 
         connection.end();
@@ -233,7 +230,8 @@ async function findOrCreateUserByGoogleId(profile) {
             Username: sanitizedUsername,
             EmailVerified: true,
             GoogleID: googleId,
-            ProfilePicture: '/uploads/profile_pictures/default.png'
+            ProfilePicture: '/uploads/profile_pictures/default.png',
+            AdminLevel: 0  // Default for Google users is also regular user
         };
     }
 }
