@@ -3,11 +3,13 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { findOrCreateUserByGoogleId } = require('../src/cli');
 require('dotenv').config();
 
+// Serialize user to session
 passport.serializeUser(function(user, done) {
     console.log('Serializing user with UserID:', user.UserID); 
-    done(null, user.UserID);  
+    done(null, user.UserID);  // Store UserID in the session
 });
 
+// Deserialize user from session
 passport.deserializeUser(async function(id, done) {
     try {
         const connection = await require('../src/cli').createConnection();
@@ -24,7 +26,7 @@ passport.deserializeUser(async function(id, done) {
             }
 
             if (deserializedUser.EmailVerified && deserializedUser.PasswordHash !== '0') {
-                return done(null, deserializedUser);
+                return done(null, deserializedUser); // Ensure AdminLevel is returned here
             } else {
                 return done(new Error('User is not verified or password is not set'), null);
             }
@@ -37,15 +39,20 @@ passport.deserializeUser(async function(id, done) {
     }
 });
 
+
+
+
+// Configure Google OAuth strategy
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:1339/auth/google/callback" 
+    callbackURL: "http://localhost:1339/auth/google/callback"  // Ensure this matches your OAuth settings
 },
 async function(accessToken, refreshToken, profile, done) {
     try {
         console.log('Received Google profile:', profile);
 
+        // Find or create the user using the Google profile info
         const user = await findOrCreateUserByGoogleId(profile);
 
         console.log('Google OAuth: User found or created:', user);

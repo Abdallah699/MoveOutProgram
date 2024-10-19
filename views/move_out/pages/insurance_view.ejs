@@ -1,12 +1,19 @@
 <%- include("./../partials/header.ejs") %>
 
-<div class="container my-labels-container">
+<div class="container label-details-container">
     <div class="row justify-content-center">
         <div class="col-lg-10 col-md-10 col-sm-12">
             <div class="text-center mb-4">
-                <h2 class="my-labels-title">Insurance Label: <%= label.LabelName || 'Insurance Label' %></h2>
+                <h2 class="label-title">Insurance Label: <%= label.LabelName || 'Insurance Label' %></h2>
             </div>
 
+            <div class="label-info-box">
+                <p class="label-detail"><strong>Label Name:</strong> <%= label.LabelName %></p>
+                <p class="label-detail"><strong>Label Option:</strong> <%= label.LabelOption %></p>
+                <p class="label-detail"><strong>Label Visibility:</strong> <%= label.Status %></p>
+            </div>
+
+            <!-- Insurance Items Table -->
             <div class="insurance-items-table">
                 <table class="table table-bordered">
                     <thead>
@@ -33,8 +40,57 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Display the Insurance Logo (if available) -->
+            <% if (label.insuranceLogo) { %>
+                <div class="text-center mt-4">
+                    <img src="/uploads/<%= label.insuranceLogo %>" alt="Insurance Logo" class="img-fluid insurance-logo">
+                </div>
+            <% } %>
+
+            <!-- QR Code and Print Button -->
+            <div class="qr-code-container text-center mt-4">
+                <img src="<%= qrCode %>" alt="QR Code for <%= label.LabelName %>" id="qrCode" class="qr-code-image">
+                <button class="btn print-btn mt-2" onclick="printQRCode()">Print QR Code</button>
+            </div>
+
+            <div class="action-buttons mt-4">
+                <a href="/labels" class="btn back-btn">Back to Labels</a>
+            </div>
         </div>
     </div>
 </div>
 
 <%- include("./../partials/footer.ejs") %>
+
+<script>
+    function printQRCode() {
+        var qrCodeElement = document.getElementById('qrCode');
+        var printWindow = window.open('', '_blank', 'width=400,height=400');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Print QR Code</title>
+                    <style>
+                        body {
+                            text-align: center;
+                            margin: 0;
+                            padding: 10px;
+                        }
+                        img {
+                            max-width: 100%;
+                            height: auto;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <img src="${qrCodeElement.src}" alt="QR Code">
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    }
+</script>

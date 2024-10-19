@@ -111,27 +111,37 @@ router.post("/verify-code", async (req, res) => {
     });
 });
 
+// app.get('/admin', requireLogin, requireAdmin, (req, res) => {
+//     console.log("Admin access granted:", req.user);
+//     res.render('move_out/admin/dashboard', { user: req.user });
+// });
+
+
+
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
     const result = await loginUser(email, password);
 
     if (result.success) {
+        req.session.user = {
+            UserID: result.user.UserID,
+            FullName: result.user.FullName,
+            Email: result.user.Email,
+            EmailVerified: result.user.EmailVerified,
+            AdminLevel: result.user.AdminLevel // Make sure AdminLevel is set correctly
+        };
+
+        console.log("Session data after login:", req.session.user);
+
         const sessionToken = crypto.randomBytes(32).toString("hex");
         const db = require("../config/sql");
 
         await db.query(
             'INSERT INTO Sessions (UserID, SessionToken, ExpiresAt) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))',
-            [result.userId, sessionToken]
+            [result.user.UserID, sessionToken]
         );
 
         res.cookie('sessionToken', sessionToken, { httpOnly: true });
-
-        req.user = {
-            UserID: result.userId,
-            FullName: result.fullName,
-            EmailVerified: result.emailVerified,
-            GoogleID: null
-        };
 
         return res.redirect("/welcome");
     }
@@ -142,6 +152,13 @@ router.post("/login", async (req, res) => {
         title: "Login"
     });
 });
+
+
+
+
+
+
+
 
 router.get("/welcome", requireLogin, (req, res) => {
     res.render("move_out/pages/welcome.ejs", {
@@ -972,17 +989,19 @@ router.get('/account/delete/:token', async (req, res) => {
 });
 
 router.get('/admin/dashboard', requireLogin, requireAdmin, async (req, res) => {
-    const db = require('../config/sql');
+    const db = require("../config/sql");
 
-    const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, Admin, IsDeactivated FROM Users');
+    const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, AdminLevel, IsDeactivated FROM Users');
 
-    res.render('admin/dashboard', {
+    res.render('move_out/pages/dashboard', {
         title: 'Admin Dashboard',
         users,
         isAuthenticated: !!req.user,
         user: req.user
     });
+    
 });
+
 
 router.get('/admin/users', requireLogin, requireAdmin, async (req, res) => {
     const db = require('../config/sql');
@@ -997,22 +1016,36 @@ router.get('/admin/users', requireLogin, requireAdmin, async (req, res) => {
     });
 });
 
-router.post('/admin/users/:id/toggle-activation', requireLogin, requireAdmin, async (req, res) => {
-    const userId = req.params.id;
-    const db = require('../config/sql');
+router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, res) => {
+    const userId = req.params.id; // Get the user ID from the route parameter
+    const connection = await createConnection();
 
-    const [user] = await db.query('SELECT IsDeactivated FROM Users WHERE UserID = ?', [userId]);
+    try {
+        // Fetch the user's current deactivation status
+        const [user] = await connection.query('SELECT IsDeactivated FROM Users WHERE UserID = ?', [userId]);
 
-    if (!user.length) {
-        return res.status(404).send('User not found.');
+        if (user.length === 0) {
+            return res.status(404).send('User not found.');
+        }
+
+        // Toggle the deactivation status
+        const newStatus = !user[0].IsDeactivated;
+
+        // Update the user's status in the database
+        await connection.query('UPDATE Users SET IsDeactivated = ? WHERE UserID = ?', [newStatus, userId]);
+
+        // Redirect back to the admin dashboard
+        res.redirect('/admin/dashboard');
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        res.status(500).send('Error updating user status.');
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
     }
-
-    const newStatus = !user[0].IsDeactivated;
-
-    await db.query('UPDATE Users SET IsDeactivated = ? WHERE UserID = ?', [newStatus, userId]);
-
-    res.redirect('/admin/users');
 });
+
 
 router.get('/admin/send-email', requireLogin, requireAdmin, (req, res) => {
     res.render('admin/send-email', {
@@ -1042,12 +1075,47 @@ router.post('/admin/send-email', requireLogin, requireAdmin, async (req, res) =>
     res.redirect('/admin/users');
 });
 
+router.post('/admin/users/:id/update-role', requireLogin, requireAdmin, async (req, res) => {
+    const userId = req.params.id; // The user whose role is being updated
+    const { AdminLevel } = req.body; // The new role (AdminLevel)
+    const connection = await createConnection();
+
+    try {
+        // Ensure the logged-in user is Super Admin (AdminLevel 2)
+        if (req.user.AdminLevel !== 2) {
+            return res.status(403).send('Access denied. Only Super Admins can change roles.');
+        }
+
+        // Ensure Super Admins cannot change their own role
+        if (req.user.UserID === parseInt(userId)) {
+            return res.status(403).send('You cannot change your own role.');
+        }
+
+        // Update the role (AdminLevel) in the database
+        await connection.query('UPDATE Users SET AdminLevel = ? WHERE UserID = ?', [AdminLevel, userId]);
+
+        // Redirect back to the admin dashboard after successful update
+        res.redirect('/admin/dashboard');
+    } catch (error) {
+        console.error('Error updating role:', error);
+        res.status(500).send('Error updating role.');
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
+    }
+});
+
+
+
+
 
 router.get('/insurance/view/:id', requireLogin, async (req, res) => {
     const labelId = req.params.id;
     const connection = await createConnection();
 
     try {
+        // Fetch the insurance label details
         const [insuranceLabel] = await connection.query('SELECT * FROM Labels WHERE LabelID = ? AND LabelOption = "insurance"', [labelId]);
         const [insuranceItems] = await connection.query('SELECT * FROM InsuranceBoxItems WHERE LabelID = ?', [labelId]);
 
@@ -1055,10 +1123,24 @@ router.get('/insurance/view/:id', requireLogin, async (req, res) => {
             return res.status(404).send('Insurance label not found.');
         }
 
-        res.render('move_out/pages/insurance_view.ejs', {
+        // Generate the QR code
+        const qrUrl = `http://localhost:1339/insurance/view/${labelId}`; // Adjust the URL if necessary
+        const qrCodeOptions = {
+            color: {
+                dark: '#000000',
+                light: '#0000'
+            }
+        };
+        const qrCode = await QRCode.toDataURL(qrUrl, qrCodeOptions);
+
+
+
+        // Render the insurance view page
+        res.render('move_out/pages/insurance_view', {
             title: `View Insurance Label: ${insuranceLabel[0].LabelName || 'Insurance Label'}`,
             label: insuranceLabel[0],
             items: insuranceItems,
+            qrCode, // Pass the generated QR code
             user: req.user,
             isAuthenticated: true
         });
@@ -1071,6 +1153,7 @@ router.get('/insurance/view/:id', requireLogin, async (req, res) => {
         }
     }
 });
+
 
 
 

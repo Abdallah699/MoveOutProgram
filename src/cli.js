@@ -112,10 +112,13 @@ async function verifyEmail(email, verificationCode) {
     return { success: true, message: 'Email verified successfully!' };
 }
 
+
 async function loginUser(email, password) {
     const connection = await createConnection();
+    
+    // Query the database for the user with the provided email
     const [user] = await connection.query(
-        'SELECT Salt, PasswordHash, EmailVerified, IsDeactivated, UserID FROM Users WHERE Email = ?',
+        'SELECT UserID, FullName, Email, EmailVerified, IsDeactivated, AdminLevel, PasswordHash, Salt FROM Users WHERE Email = ?',
         [email]
     );
 
@@ -133,6 +136,7 @@ async function loginUser(email, password) {
         return { success: false, message: 'Please verify your email before logging in.' };
     }
 
+    // Check password for regular user
     const isPasswordValid = await bcrypt.compare(password + userData.Salt, userData.PasswordHash);
 
     if (!isPasswordValid) {
@@ -141,8 +145,24 @@ async function loginUser(email, password) {
 
     connection.end();
 
-    return { success: true, message: 'Login successful!', userId: userData.UserID };
+    // Ensure AdminLevel is passed for session
+    return {
+        success: true,
+        message: 'Login successful!',
+        user: {
+            UserID: userData.UserID,
+            FullName: userData.FullName,
+            Email: userData.Email,
+            EmailVerified: userData.EmailVerified,
+            AdminLevel: userData.AdminLevel  // Make sure this is included
+        }
+    };
 }
+
+
+
+
+
 
 async function sendPasswordResetConfirmation(email) {
     const transporter = nodemailer.createTransport({

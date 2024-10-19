@@ -4,6 +4,7 @@ const routes = require("./routes/routes.js");
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const passport = require('passport');
+const path = require('path');  // <-- Add this line to import the 'path' module
 
 app.use(express.static("public"));
 app.use('/uploads', express.static('public/uploads'));
