@@ -1,85 +1,97 @@
 <%- include("./../partials/header.ejs") %>
 
 <div class="container mt-5">
-    <h1>Admin Dashboard</h1>
-    
-    <h2>Users</h2>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Profile Picture</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% users.forEach(function(user) { %>
-                <tr>
-                    <td><%= user.FullName %></td>
-                    <td><%= user.Email %></td>
-                    <td><img src="<%= user.ProfilePicture %>" alt="Profile Picture" style="width: 50px; height: 50px;"></td>
-                    
-                    <!-- Role change options based on the current user's AdminLevel -->
-                    <td>
-                        <% if (user.UserID !== locals.user.UserID && locals.user.AdminLevel === 2) { %>
-                            <!-- Super admin can change others' roles but not assign level 2 to others -->
-                            <form action="/admin/users/<%= user.UserID %>/update-role" method="POST" style="display:inline;">
-                                <select name="AdminLevel" class="form-control form-control-sm">
-                                    <option value="0" <%= user.AdminLevel === 0 ? 'selected' : '' %>>User</option>
-                                    <option value="1" <%= user.AdminLevel === 1 ? 'selected' : '' %>>Admin</option>
-                                    <!-- Disable level 2 for others if the current user is also admin level 2 -->
-                                    <% if (locals.user.AdminLevel > user.AdminLevel) { %>
-                                        <option value="2" disabled><%= user.AdminLevel === 2 ? 'Super Admin' : '' %></option>
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-md-12">
+            <div class="dashboard-box-wrapper">
+                <h1 class="text-center mb-4">Admin Dashboard</h1>
+
+                <% if (successMessage) { %>
+                    <div class="alert alert-success text-center">
+                        <p><%= successMessage %></p>
+                    </div>
+                <% } %>
+
+                <% if (errorMessage) { %>
+                    <div class="alert alert-danger text-center">
+                        <p><%= errorMessage %></p>
+                    </div>
+                <% } %>
+
+                <h2 class="mb-4">Users</h2>
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Profile Picture</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(function(user) { %>
+                            <tr>
+                                <td><%= user.FullName %></td>
+                                <td><%= user.Email %></td>
+                                <td>
+                                    <img src="<%= user.ProfilePicture %>" alt="Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
+                                </td>
+                                <td>
+                                    <% if (user.UserID !== locals.user.UserID && locals.user.AdminLevel === 2) { %>
+                                        <form action="/admin/users/<%= user.UserID %>/update-role" method="POST" style="display:inline;">
+                                            <select name="AdminLevel" class="form-control form-control-sm">
+                                                <option value="0" <%= user.AdminLevel === 0 ? 'selected' : '' %>>User</option>
+                                                <option value="1" <%= user.AdminLevel === 1 ? 'selected' : '' %>>Admin</option>
+                                                <% if (locals.user.AdminLevel > user.AdminLevel) { %>
+                                                    <option value="2" disabled><%= user.AdminLevel === 2 ? 'Super Admin' : '' %></option>
+                                                <% } %>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-info mt-1">Update</button>
+                                        </form>
+                                    <% } else if (user.UserID === locals.user.UserID) { %>
+                                        <span class="text-muted">You cannot change your own role</span>
+                                    <% } else { %>
+                                        <%= user.AdminLevel === 0 ? 'User' : (user.AdminLevel === 1 ? 'Admin' : 'Super Admin') %>
                                     <% } %>
-                                </select>
-                                <button type="submit" class="btn btn-sm btn-info mt-1">Update</button>
-                            </form>
-                        <% } else if (user.UserID === locals.user.UserID) { %>
-                            <span>You cannot change your own role</span>
-                        <% } else { %>
-                            <%= user.AdminLevel === 0 ? 'User' : (user.AdminLevel === 1 ? 'Admin' : 'Super Admin') %>
-                        <% } %>
-                    </td>
-                    
-                    <!-- Display user status -->
-                    <td><%= user.IsDeactivated ? 'Deactivated' : 'Active' %></td>
+                                </td>
 
-                    <!-- Action buttons for activating/deactivating -->
-                    <td>
-                        <% if (locals.user.AdminLevel >= 1 && user.UserID !== locals.user.UserID && user.AdminLevel <= locals.user.AdminLevel) { %>
-                            <!-- Admin level 1 and 2 can activate/deactivate users with the same or lower admin level -->
-                            <form action="/admin/users/<%= user.UserID %>/toggle" method="POST" style="display:inline;">
-                                <button class="btn btn-sm <%= user.IsDeactivated ? 'btn-success' : 'btn-warning' %>">
-                                    <%= user.IsDeactivated ? 'Activate' : 'Deactivate' %>
-                                </button>
-                            </form>
-                        <% } else if (user.AdminLevel > locals.user.AdminLevel) { %>
-                            <!-- If target user has a higher admin level, no action is allowed -->
-                            <span>Insufficient permissions</span>
-                        <% } else if (user.UserID === locals.user.UserID) { %>
-                            <span>You cannot deactivate your own account</span>
-                        <% } %>
-                    </td>
-                </tr>
-            <% }); %>
-        </tbody>
-    </table>
+                                <td><%= user.IsDeactivated ? 'Deactivated' : 'Active' %></td>
 
-    <h2>Send Marketing Email</h2>
-    <form action="/admin/send-email" method="POST">
-        <div class="form-group">
-            <label for="emailSubject">Email Subject:</label>
-            <input type="text" class="form-control" id="emailSubject" name="emailSubject" required>
+                                <td>
+                                    <% if (locals.user.AdminLevel >= 1 && user.UserID !== locals.user.UserID && user.AdminLevel <= locals.user.AdminLevel) { %>
+                                        <form action="/admin/users/<%= user.UserID %>/toggle" method="POST" style="display:inline;">
+                                            <button class="btn btn-sm <%= user.IsDeactivated ? 'btn-success' : 'btn-warning' %>">
+                                                <%= user.IsDeactivated ? 'Activate' : 'Deactivate' %>
+                                            </button>
+                                        </form>
+                                    <% } else if (user.AdminLevel > locals.user.AdminLevel) { %>
+                                        <span class="text-muted">Insufficient permissions</span>
+                                    <% } else if (user.UserID === locals.user.UserID) { %>
+                                        <span class="text-muted">You cannot deactivate your own account</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+
+                <h2 class="mt-5 mb-4">Send Marketing Email</h2>
+                <form action="/admin/send-email" method="POST">
+                    <div class="form-group">
+                        <label for="emailSubject"><strong>Email Subject:</strong></label>
+                        <input type="text" class="form-control" id="emailSubject" name="emailSubject" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emailBody"><strong>Email Body:</strong></label>
+                        <textarea class="form-control" id="emailBody" name="emailBody" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Send Email</button>
+                </form>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="emailBody">Email Body:</label>
-            <textarea class="form-control" id="emailBody" name="emailBody" rows="5" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Send Email</button>
-    </form>
+    </div>
 </div>
 
 <%- include("./../partials/footer.ejs") %>

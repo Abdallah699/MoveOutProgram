@@ -982,18 +982,20 @@ router.get('/account/delete/:token', async (req, res) => {
 });
 
 router.get('/admin/dashboard', requireLogin, requireAdmin, async (req, res) => {
-    const db = require("../config/sql");
-
+    const db = require('../config/sql');
     const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, AdminLevel, IsDeactivated FROM Users');
 
+    // Pass successMessage and errorMessage as null if not set
     res.render('move_out/pages/dashboard', {
         title: 'Admin Dashboard',
         users,
+        successMessage: req.query.successMessage || null, // Add this line
+        errorMessage: req.query.errorMessage || null, // Add this line
         isAuthenticated: !!req.user,
         user: req.user
     });
-    
 });
+
 
 
 router.get('/admin/users', requireLogin, requireAdmin, async (req, res) => {
@@ -1014,23 +1016,54 @@ router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, r
     const connection = await createConnection();
 
     try {
-        // Fetch the user's current deactivation status
-        const [user] = await connection.query('SELECT IsDeactivated FROM Users WHERE UserID = ?', [userId]);
+        // Fetch the user's current deactivation status and email
+        const [user] = await connection.query('SELECT Email, FullName, IsDeactivated FROM Users WHERE UserID = ?', [userId]);
 
         if (user.length === 0) {
             return res.status(404).send('User not found.');
         }
 
-        // Toggle the deactivation status
-        const newStatus = !user[0].IsDeactivated;
+        const userEmail = user[0].Email;
+        const userName = user[0].FullName;
+        const newStatus = !user[0].IsDeactivated; // Toggle the deactivation status
 
         // Update the user's status in the database
         await connection.query('UPDATE Users SET IsDeactivated = ? WHERE UserID = ?', [newStatus, userId]);
 
+        // Create transporter for sending emails
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        // If the account is deactivated, send a deactivation email
+        if (newStatus) {
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: userEmail,
+                subject: 'Your Account Has Been Deactivated',
+                text: `Hello ${userName},\n\nYour account has been deactivated by an admin.\nIf you would like to appeal this decision or need further assistance, please contact us at alhamadrelocations@gmail.com.\n\nThank you,\nAlhamad Relocations Team`
+            };
+            await transporter.sendMail(mailOptions);
+
+        // If the account is activated, send an activation email
+        } else {
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: userEmail,
+                subject: 'Your Account Has Been Activated',
+                text: `Hello ${userName},\n\nGood news! Your account has been reactivated by an admin.\nYou can now log in and access your account.\nIf you have any questions, feel free to contact us at alhamadrelocations@gmail.com.\n\nThank you,\nAlhamad Relocations Team`
+            };
+            await transporter.sendMail(mailOptions);
+        }
+
         // Redirect back to the admin dashboard
         res.redirect('/admin/dashboard');
     } catch (error) {
-        console.error('Error updating user status:', error);
+        console.error('Error updating user status or sending email:', error);
         res.status(500).send('Error updating user status.');
     } finally {
         if (connection) {
@@ -1038,6 +1071,7 @@ router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, r
         }
     }
 });
+
 
 
 router.get('/admin/send-email', requireLogin, requireAdmin, (req, res) => {
@@ -1049,24 +1083,42 @@ router.get('/admin/send-email', requireLogin, requireAdmin, (req, res) => {
 });
 
 router.post('/admin/send-email', requireLogin, requireAdmin, async (req, res) => {
-    const { subject, message } = req.body;
-    const db = require('../config/sql');
+    const { emailSubject, emailBody } = req.body;
 
+    const db = require('../config/sql');
     const [users] = await db.query('SELECT Email FROM Users WHERE IsDeactivated = FALSE');
 
-    for (const user of users) {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: user.Email,
-            subject: subject,
-            text: message
-        };
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
 
-        await transporter.sendMail(mailOptions);
+    try {
+        for (const user of users) {
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: user.Email,
+                subject: emailSubject,
+                text: emailBody
+            };
+
+            await transporter.sendMail(mailOptions);
+        }
+
+        // Redirect to dashboard with a success message
+        res.redirect('/admin/dashboard?successMessage=Emails have been sent successfully!');
+    } catch (error) {
+        console.error('Error sending emails:', error);
+        // Redirect to dashboard with an error message
+        res.redirect('/admin/dashboard?errorMessage=There was an error sending the emails. Please try again.');
     }
-
-    res.redirect('/admin/users');
 });
+
+    
+
 
 router.post('/admin/users/:id/update-role', requireLogin, requireAdmin, async (req, res) => {
     const userId = req.params.id; // The user whose role is being updated
