@@ -24,28 +24,22 @@
                                             <!-- Label Overlay -->
                                             <div class="label-overlay">
                                                 <% if (label.LabelOption !== 'insurance') { %>
-                                                    <!-- For non-insurance labels, display label name and type -->
                                                     <h5 class="label-name"><%= label.LabelName %></h5>
                                                     <p class="label-type">
                                                         <%= label.LabelOption %> | <%= label.Status ? (label.Status.charAt(0).toUpperCase() + label.Status.slice(1)) : 'Private' %>
                                                     </p>
                                                 <% } else { %>
-                                                    <!-- For insurance labels, display item details -->
-                                                    <% if (label.insuranceItems && label.insuranceItems.length > 0) { %>
-                                                        <ul class="list-unstyled insurance-item-list">
-                                                            <% var maxItemsToShow = 4; %>
-                                                            <% label.insuranceItems.slice(0, maxItemsToShow).forEach(function(item) { %>
-                                                                <li>
-                                                                    <strong><%= item.ItemName %></strong> - <%= item.ItemValue %> <%= item.Currency %>
-                                                                </li>
-                                                            <% }); %>
-                                                            <% if (label.insuranceItems.length > maxItemsToShow) { %>
-                                                                <li>To view the rest of the items, press <a href="/insurance/view/<%= label.LabelID %>">View</a></li>
-                                                            <% } %>
-                                                        </ul>
-                                                    <% } else { %>
-                                                        <p>No items added.</p>
-                                                    <% } %>
+                                                    <ul class="list-unstyled insurance-item-list">
+                                                        <% var maxItemsToShow = 4; %>
+                                                        <% label.insuranceItems.slice(0, maxItemsToShow).forEach(function(item) { %>
+                                                            <li>
+                                                                <strong><%= item.ItemName %></strong> - <%= item.ItemValue %> <%= item.Currency %>
+                                                            </li>
+                                                        <% }); %>
+                                                        <% if (label.insuranceItems.length > maxItemsToShow) { %>
+                                                            <li>To view the rest of the items, press <a href="/insurance/view/<%= label.LabelID %>">View</a></li>
+                                                        <% } %>
+                                                    </ul>
                                                 <% } %>
                                             </div>
 
@@ -64,15 +58,14 @@
                                                     <% if (label.Status === 'public') { %>
                                                         <button type="button" class="btn btn-info share-button" data-label-id="<%= label.LabelID %>" data-label-name="<%= label.LabelName %>">Share</button>
                                                     <% } %>
-                                                    <!-- Print Button -->
                                                     <button type="button" class="btn btn-secondary print-label-btn" 
-                                                            data-label-id="<%= label.LabelID %>" data-label-name="<%= label.LabelName %>" 
-                                                            data-label-design="<%= label.LabelDesign %>" data-label-option="<%= label.LabelOption %>" 
-                                                            data-qr-code="<%= qrCodes[label.LabelID] %>" 
-                                                            <% if (label.LabelOption === 'insurance') { %>
-                                                                data-insurance-items='<%= JSON.stringify(label.insuranceItems) %>' 
-                                                                data-insurance-logo="<%= label.insuranceLogo %>"
-                                                            <% } %>>
+                                                        data-label-id="<%= label.LabelID %>" 
+                                                        data-label-name="<%= label.LabelName %>" 
+                                                        data-label-design="<%= label.LabelDesign %>" 
+                                                        data-label-option="<%= label.LabelOption %>" 
+                                                        data-qr-code="<%= qrCodes[label.LabelID] %>" 
+                                                        data-insurance-items='<%= JSON.stringify(label.insuranceItems) %>' 
+                                                        data-insurance-logo="<%= label.insuranceLogo %>">
                                                         Print
                                                     </button>
                                                 </div>
@@ -146,116 +139,99 @@
 <%- include("./../partials/footer.ejs") %>
 
 <script>
-    $(document).ready(function() {
-        // Print Label Functionality
-        $('.print-label-btn').on('click', function() {
-            var labelName = $(this).data('label-name');
-            var labelDesign = $(this).data('label-design');
-            var qrCode = $(this).data('qr-code');
-            var labelOption = $(this).data('label-option');
-            var insuranceItems = $(this).data('insurance-items');
-            var insuranceLogo = $(this).data('insurance-logo');
+    $('.print-label-btn').on('click', function() {
+        var labelName = $(this).data('label-name');
+        var labelDesign = $(this).data('label-design');
+        var qrCode = $(this).data('qr-code');
+        var labelOption = $(this).data('label-option');
+        var insuranceItems = $(this).data('insurance-items');
+        var insuranceLogo = $(this).data('insurance-logo');
 
-            var printWindow = window.open('', '_blank', 'width=800,height=600');
-            var printContent = `
-                <html>
-                <head>
-                    <title>Print Label - ${labelName}</title>
-                    <style>
-                        @media print {
-                            body {
-                                margin: 0;
-                                padding: 0;
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                                height: 100vh;
-                                background-color: #fff;
-                            }
-                            .label-container {
-                                width: 400px;
-                                height: 600px;
-                                background-image: url('/images/${labelDesign}');
-                                background-size: cover;
-                                background-position: center;
-                                text-align: center;
-                                padding: 20px;
-                                box-sizing: border-box;
-                                position: relative;
-                                border: 2px solid #000;
-                                border-radius: 10px;
-                            }
-                            .label-title {
-                                font-size: 24px;
-                                font-weight: bold;
-                                margin-top: 20px;
-                                color: #333;
-                            }
-                            .label-subtitle {
-                                font-size: 14px;
-                                color: #555;
-                                margin-bottom: 20px;
-                            }
-                            .qr-code-image {
-                                width: 150px;
-                                height: 150px;
-                                margin-top: 20px;
-                                border: 2px solid #ddd;
-                                padding: 10px;
-                                background: #fff;
-                            }
-                            .insurance-logo {
-                                max-width: 150px;
-                                margin-top: 20px;
-                            }
+        // Open a new print window
+        var printWindow = window.open('', '_blank', 'width=800,height=600');
+        var printContent = `
+            <html>
+            <head>
+                <title>Print Label - ${labelName}</title>
+                <style>
+                    @media print {
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            background-color: #fff;
                         }
-                    </style>
-                </head>
-                <body>
-                    <div class="label-container" style="background-image: url('/images/${labelDesign}'); background-size: cover; background-position: center;">
-                        <div class="label-title">${labelName}</div>
-                        <div class="label-subtitle">${labelOption} | ${labelOption === 'insurance' ? 'Insurance' : 'Public'}</div>
-                        <img src="${qrCode}" class="qr-code-image" alt="QR Code for ${labelName}">
-            `;
+                        .label-container {
+                            width: 400px;
+                            height: 600px;
+                            background-image: url('/images/${labelDesign}');
+                            background-size: cover;
+                            background-position: center;
+                            text-align: center;
+                            padding: 20px;
+                            box-sizing: border-box;
+                            border: 2px solid #000;
+                            border-radius: 10px;
+                        }
+                        .label-title {
+                            font-size: 24px;
+                            font-weight: bold;
+                            margin-top: 20px;
+                        }
+                        .qr-code-image {
+                            width: 150px;
+                            height: 150px;
+                            margin-top: 20px;
+                            border: 2px solid #ddd;
+                        }
+                        .insurance-logo {
+                            max-width: 100px;
+                            margin-top: 10px;
+                        }
+                        .insurance-items {
+                            margin-top: 20px;
+                            text-align: left;
+                            padding-left: 20px;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="label-container">
+                    <div class="label-title">${labelName}</div>
+                    <img src="${qrCode}" class="qr-code-image" alt="QR Code">
+        `;
 
-            // If it's an insurance label, include insurance details and logo
-            if (labelOption === 'insurance' && insuranceItems) {
-                insuranceItems = JSON.parse(insuranceItems);
-                printContent += `
-                    <div class="insurance-container">
-                        <h2>Insurance Items</h2>
-                        <ul>
-                `;
-                insuranceItems.forEach(function(item) {
-                    printContent += `<li>${item.ItemName} - ${item.ItemValue} ${item.Currency}</li>`;
-                });
-                printContent += `</ul>`;
-
-                if (insuranceLogo) {
-                    printContent += `<img src="/uploads/${insuranceLogo}" class="insurance-logo" alt="Insurance Logo">`;
-                }
-
-                printContent += `</div>`;
-            }
-
+        if (labelOption === 'insurance' && insuranceItems.length > 0) {
             printContent += `
-                    </div>
-                </body>
-                </html>
+                <div class="insurance-items">
+                    <h2>Insurance Items</h2>
+                    <ul>
             `;
+            insuranceItems.forEach(function(item) {
+                printContent += `<li>${item.ItemName} - ${item.ItemValue} ${item.Currency}</li>`;
+            });
+            printContent += `</ul></div>`;
+            if (insuranceLogo) {
+                printContent += `<img src="/uploads/${insuranceLogo}" class="insurance-logo" alt="Insurance Logo">`;
+            }
+        }
 
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            printWindow.focus();
+        printContent += `
+                </div>
+            </body>
+            </html>
+        `;
 
-            // Delay printing for 1 second and closing the window after 5 seconds
-            setTimeout(() => {
-                printWindow.print();
-            }, 1000);
+        printWindow.document.write(printContent);
+        printWindow.document.close();
 
-            setTimeout(() => {
-                printWindow.close();
-            }, 5000);
-        });
+        // Ensure the print dialog appears after the content is fully loaded
+        printWindow.onload = function() {
+            printWindow.print();
+        };
     });
 </script>

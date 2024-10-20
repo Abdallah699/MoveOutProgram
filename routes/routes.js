@@ -317,68 +317,83 @@ router.post('/create-label/submit', requireLogin, upload.fields([
         labelDesign,
         labelName,
         labelOption,
-        contentType,
-        contentText,
-        status,
-        itemNames,
-        itemValues,
-        itemCurrencies
+        contentType, // Content type (text, audio, image)
+        contentText, // Text content
+        status, // Label status (public/private)
+        itemNames, // Insurance item names
+        itemValues, // Insurance item values
+        itemCurrencies // Insurance item currencies
     } = req.body;
+
     const userId = req.user.UserID;
 
-    console.log('Form data received in submit:', req.body);
-    console.log('Files received:', req.files);
+    let contentData = {}; // Store content details
 
-    let contentData = {};
-
+    // Handle the content type (text, audio, image)
     if (contentType === 'text') {
-        contentData = { type: 'text', data: contentText };
+        contentData = { type: 'text', data: contentText }; // Save text content
     } else if (contentType === 'audio') {
         const audioFile = req.files['contentAudio'] ? req.files['contentAudio'][0] : null;
-        contentData = { type: 'audio', data: audioFile };
+        if (audioFile) {
+            contentData = { type: 'audio', data: audioFile.filename }; // Save audio filename
+        }
     } else if (contentType === 'image') {
         const imageFiles = req.files['contentImages'] || [];
-        contentData = { type: 'image', data: imageFiles };
+        contentData = { type: 'image', data: imageFiles.map(file => file.filename) }; // Save image filenames
     }
 
     const connection = await createConnection();
     try {
-        // Handle labelName for insurance labels
-        let labelNameToSave = labelName;
-        if (labelOption === 'insurance' && (!labelName || labelName.trim() === '')) {
-            labelNameToSave = null; // or set to a default name if preferred
-        }
-
+        // Insert the label into the Labels table
         await connection.query(
             'INSERT INTO Labels (UserID, LabelDesign, LabelName, LabelOption, Status) VALUES (?, ?, ?, ?, ?)',
-            [userId, labelDesign, labelNameToSave, labelOption, status]
+            [userId, labelDesign, labelName, labelOption, status]
         );
 
         const [result] = await connection.query('SELECT LAST_INSERT_ID() AS LabelID');
         const labelId = result[0].LabelID;
 
+        // Insert content based on the content type
+        if (contentData.type === 'text') {
+            // Insert text content
+            await connection.query(
+                'INSERT INTO LabelContents (LabelID, ContentType, ContentText) VALUES (?, ?, ?)',
+                [labelId, 'text', contentData.data]
+            );
+        } else if (contentData.type === 'audio') {
+            // Insert audio content (filename)
+            await connection.query(
+                'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+                [labelId, 'audio', contentData.data]
+            );
+        } else if (contentData.type === 'image') {
+            // Insert image content (multiple images)
+            for (const image of contentData.data) {
+                await connection.query(
+                    'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
+                    [labelId, 'image', image]
+                );
+            }
+        }
+
+        // If the label option is 'insurance', handle insurance-specific content
         if (labelOption === 'insurance') {
             const insuranceLogo = req.files['insuranceLogo'] ? req.files['insuranceLogo'][0].filename : null;
 
-            // Ensure itemNames, itemValues, itemCurrencies are arrays
-            let itemNamesArray = itemNames;
-            let itemValuesArray = itemValues;
-            let itemCurrenciesArray = itemCurrencies;
-            if (!Array.isArray(itemNamesArray)) {
-                itemNamesArray = [itemNamesArray];
-                itemValuesArray = [itemValuesArray];
-                itemCurrenciesArray = [itemCurrenciesArray];
+            // Ensure itemNames, itemValues, and itemCurrencies are arrays, even if there's only one item
+            let itemNamesArray = Array.isArray(itemNames) ? itemNames : [itemNames];
+            let itemValuesArray = Array.isArray(itemValues) ? itemValues : [itemValues];
+            let itemCurrenciesArray = Array.isArray(itemCurrencies) ? itemCurrencies : [itemCurrencies];
+
+            // Insert insurance items into the InsuranceBoxItems table
+            for (let i = 0; i < itemNamesArray.length; i++) {
+                await connection.query(
+                    'INSERT INTO InsuranceBoxItems (LabelID, ItemName, ItemValue, Currency) VALUES (?, ?, ?, ?)',
+                    [labelId, itemNamesArray[i], itemValuesArray[i], itemCurrenciesArray[i]]
+                );
             }
 
-            if (Array.isArray(itemNamesArray) && Array.isArray(itemValuesArray) && Array.isArray(itemCurrenciesArray)) {
-                for (let i = 0; i < itemNamesArray.length; i++) {
-                    await connection.query(
-                        'INSERT INTO InsuranceBoxItems (LabelID, ItemName, ItemValue, Currency) VALUES (?, ?, ?, ?)',
-                        [labelId, itemNamesArray[i], itemValuesArray[i], itemCurrenciesArray[i]]
-                    );
-                }
-            }
-
+            // Insert insurance logo if available
             if (insuranceLogo) {
                 await connection.query(
                     'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
@@ -387,26 +402,7 @@ router.post('/create-label/submit', requireLogin, upload.fields([
             }
         }
 
-        // Handle other content types
-        if (contentData.type === 'text') {
-            await connection.query(
-                'INSERT INTO LabelContents (LabelID, ContentType, ContentText) VALUES (?, ?, ?)',
-                [labelId, 'text', contentData.data]
-            );
-        } else if (contentData.type === 'audio' && contentData.data) {
-            await connection.query(
-                'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
-                [labelId, 'audio', contentData.data.filename]
-            );
-        } else if (contentData.type === 'image') {
-            for (const image of contentData.data) {
-                await connection.query(
-                    'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
-                    [labelId, 'image', image.filename]
-                );
-            }
-        }
-
+        // Redirect to the labels list page after successful submission
         res.redirect('/labels');
     } catch (error) {
         console.error('Error creating label:', error);
@@ -417,6 +413,8 @@ router.post('/create-label/submit', requireLogin, upload.fields([
         }
     }
 });
+
+
 
 router.get('/labels', requireLogin, async (req, res) => {
     const connection = await createConnection();

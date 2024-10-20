@@ -59,7 +59,7 @@
                                                 </div>
                                             <% } else if (content.ContentType === 'text') { %>
                                                 <div class="text-content-carousel text-center">
-                                                    <p class="carousel-text styled-text-content"><%= content.ContentData %></p>
+                                                    <p class="carousel-text styled-text-content"><%= content.ContentText %></p>
                                                 </div>
                                             <% } %>
                                             <button type="button" class="btn btn-danger btn-sm delete-button" data-content-id="<%= content.ContentID %>">
@@ -120,17 +120,28 @@
 
 <script>
     $(document).ready(function() {
+        // Initialize carousel
         $('#contentCarousel').carousel({
             interval: false
         });
 
+        // Handle content type selection for new content
         $('#contentType').on('change', function() {
             var contentType = this.value;
-            $('#textContent').toggle(contentType === 'text');
-            $('#imageContent').toggle(contentType === 'image');
-            $('#audioContent').toggle(contentType === 'audio');
+            $('#textContent').hide();
+            $('#imageContent').hide();
+            $('#audioContent').hide();
+
+            if (contentType === 'text') {
+                $('#textContent').show();
+            } else if (contentType === 'image') {
+                $('#imageContent').show();
+            } else if (contentType === 'audio') {
+                $('#audioContent').show();
+            }
         });
 
+        // Handle delete content action
         $('.delete-button').on('click', function() {
             var contentId = $(this).data('content-id');
             $('#removedContentInputs').append(
@@ -144,6 +155,7 @@
             var isActive = carouselItem.hasClass('active');
             carouselItem.remove();
 
+            // Check if the deleted item was active, and if so, activate the next item
             if (isActive) {
                 $('#contentCarousel .carousel-item').first().addClass('active');
             }
@@ -152,6 +164,7 @@
                 interval: false
             });
 
+            // Hide the carousel if no items are left
             if ($('#contentCarousel .carousel-item').length === 0) {
                 $('#contentCarousel').hide();
             }
