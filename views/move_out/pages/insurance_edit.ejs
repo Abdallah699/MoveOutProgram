@@ -1,98 +1,122 @@
 <%- include("./../partials/header.ejs") %>
 
-<div class="container my-labels-container">
+<div class="container label-details-container mt-5">
     <div class="row justify-content-center">
         <div class="col-lg-10 col-md-10 col-sm-12">
+            <!-- Title -->
             <div class="text-center mb-4">
-                <h2 class="my-labels-title">Shared Labels</h2>
+                <h2 class="label-title text-uppercase">Edit Insurance Label: <%= label.LabelName || 'Insurance Label' %></h2>
             </div>
 
-            <div class="label-cards-wrapper">
-                <div class="row">
-                    <% if (sharedLabels.length > 0) { %>
-                        <% sharedLabels.forEach(function(label) { %>
-                            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                                <div class="card text-center label-card position-relative">
-                                    <div class="card-body p-0">
-                                        <div class="label-image-container position-relative">
-                                            <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
-
-                                            <!-- Label Overlay -->
-                                            <div class="label-overlay">
-                                                <% if (label.LabelOption !== 'insurance') { %>
-                                                    <h5 class="label-name"><%= label.LabelName %></h5>
-                                                    <p class="label-type">
-                                                        <%= label.LabelOption %> | Shared by <%= label.SharedBy %>
-                                                    </p>
-                                                <% } else { %>
-                                                    <ul class="list-unstyled insurance-item-list">
-                                                        <% var maxItemsToShow = 4; %>
-                                                        <% if (label.insuranceItems && label.insuranceItems.length > 0) { %>
-                                                            <% label.insuranceItems.slice(0, maxItemsToShow).forEach(function(item) { %>
-                                                                <li>
-                                                                    <strong><%= item.ItemName %></strong> - <%= item.ItemValue %> <%= item.Currency %>
-                                                                </li>
-                                                            <% }); %>
-                                                            <% if (label.insuranceItems.length > maxItemsToShow) { %>
-                                                                <li>To view the rest of the items, press <a href="/insurance/view/<%= label.LabelID %>">View</a></li>
-                                                            <% } %>
-                                                        <% } else { %>
-                                                            <li>No insurance items available</li>
-                                                        <% } %>
-                                                    </ul>
-                                                <% } %>
-                                            </div>
-
-                                            <!-- Label Hover Overlay with Buttons -->
-                                            <div class="label-hover-overlay">
-                                                <div class="btn-group-vertical">
-                                                    <% if (label.LabelOption === 'insurance') { %>
-                                                        <a href="/insurance/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
-                                                    <% } else { %>
-                                                        <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
-                                                    <% } %>
-                                                    <button type="button" class="btn btn-secondary print-label-btn" 
-                                                        data-label-id="<%= label.LabelID %>" 
-                                                        data-label-name="<%= label.LabelName %>" 
-                                                        data-label-design="<%= label.LabelDesign %>" 
-                                                        data-label-option="<%= label.LabelOption %>" 
-                                                        data-qr-code="<%= qrCodes[label.LabelID] %>" 
-                                                        data-insurance-items='<%= JSON.stringify(label.insuranceItems) %>' 
-                                                        data-insurance-logo="<%= label.insuranceLogo %>">
-                                                        Print
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- QR Code and Insurance Logo -->
-                                        <% if (label.LabelOption === 'insurance') { %>
-                                            <div class="logo-qr-container mt-3 d-flex justify-content-between align-items-center">
-                                                <% if (label.insuranceLogo) { %>
-                                                    <div class="insurance-logo-container">
-                                                        <img src="/uploads/<%= label.insuranceLogo %>" alt="Insurance Logo" class="img-fluid insurance-logo">
-                                                    </div>
-                                                <% } %>
-                                                <div class="qr-code-container-insurance text-center">
-                                                    <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image-insurance">
-                                                </div>
-                                            </div>
-                                        <% } else { %>
-                                            <div class="qr-code-container-normal">
-                                                <img src="<%= qrCodes[label.LabelID] %>" alt="QR Code for <%= label.LabelName %>" class="qr-code-image">
-                                            </div>
-                                        <% } %>
-                                    </div>
-                                </div>
-                            </div>
-                        <% }); %>
-                    <% } else { %>
-                        <p class="text-center">No labels have been shared with you yet.</p>
-                    <% } %>
+            <!-- Label Info Box -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Label Information</h5>
+                    <p class="card-text"><strong>Label Name:</strong> <%= label.LabelName %></p>
+                    <p class="card-text"><strong>Label Option:</strong> <%= label.LabelOption %></p>
+                    <p class="card-text"><strong>Label Visibility:</strong> <%= label.Status.charAt(0).toUpperCase() + label.Status.slice(1) %></p>
                 </div>
+            </div>
+
+            <!-- Insurance Items Table -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Insurance Items</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Item Value</th>
+                                    <th>Currency</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (items.length > 0) { %>
+                                    <% items.forEach(function(item) { %>
+                                        <tr>
+                                            <td><%= item.ItemName %></td>
+                                            <td><%= item.ItemValue %></td>
+                                            <td><%= item.Currency %></td>
+                                            <td>
+                                                <form action="/insurance/item/delete/<%= item.InsuranceItemID %>?labelId=<%= label.LabelID %>" method="POST" style="display:inline;">
+                                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="4" class="text-center">No insurance items found.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add New Item Form -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Add New Insurance Item</h5>
+                    <form action="/insurance/item/add/<%= label.LabelID %>" method="POST" class="needs-validation" novalidate>
+                        <div class="form-row">
+                            <div class="col-md-4 mb-3">
+                                <label for="itemName">Item Name</label>
+                                <input type="text" name="itemName" class="form-control" id="itemName" placeholder="Enter item name" required>
+                                <div class="invalid-feedback">Please enter an item name.</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="itemValue">Item Value</label>
+                                <input type="number" name="itemValue" class="form-control" id="itemValue" placeholder="Enter item value" required>
+                                <div class="invalid-feedback">Please enter an item value.</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="currency">Currency</label>
+                                <select name="currency" class="form-control" id="currency" required>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <!-- Add more currencies as needed -->
+                                </select>
+                                <div class="invalid-feedback">Please select a currency.</div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-primary btn-block">Add Item</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <a href="/labels" class="btn btn-secondary">Back to Labels</a>
             </div>
         </div>
     </div>
 </div>
 
 <%- include("./../partials/footer.ejs") %>
+
+<!-- Optional JavaScript for form validation -->
+<script>
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>

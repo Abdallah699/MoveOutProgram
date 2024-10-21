@@ -1035,18 +1035,57 @@ router.get('/account/delete/:token', async (req, res) => {
 
 router.get('/admin/dashboard', requireLogin, requireAdmin, async (req, res) => {
     const db = require('../config/sql');
-    const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, AdminLevel, IsDeactivated FROM Users');
+    
+    const calculateFileSizeInMB = (filePath) => {
+        if (fs.existsSync(filePath)) {
+            const stats = fs.statSync(filePath);
+            return stats.size / (1024 * 1024); // Convert bytes to MB
+        }
+        return 0;
+    };
+    
+    try {
+        const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, AdminLevel, IsDeactivated FROM Users');
 
-    // Pass successMessage and errorMessage as null if not set
-    res.render('move_out/pages/dashboard', {
-        title: 'Admin Dashboard',
-        users,
-        successMessage: req.query.successMessage || null, // Add this line
-        errorMessage: req.query.errorMessage || null, // Add this line
-        isAuthenticated: !!req.user,
-        user: req.user
-    });
+        // Iterate over users to calculate their storage usage
+        const userStorageInfo = [];
+        for (const user of users) {
+            let totalStorageMB = 0;
+
+            // Profile Picture storage
+            if (user.ProfilePicture && user.ProfilePicture !== '/uploads/profile_pictures/default.png') {
+                const profilePicturePath = path.join(__dirname, '..', 'public', user.ProfilePicture);
+                totalStorageMB += calculateFileSizeInMB(profilePicturePath);
+            }
+
+            // Label Contents storage (for images, audio, etc.)
+            const [labelContents] = await db.query('SELECT ContentData FROM LabelContents WHERE LabelID IN (SELECT LabelID FROM Labels WHERE UserID = ?)', [user.UserID]);
+            for (const content of labelContents) {
+                const contentPath = path.join(__dirname, '..', 'public', 'uploads', content.ContentData);
+                totalStorageMB += calculateFileSizeInMB(contentPath);
+            }
+
+            // Add the calculated storage to user data
+            userStorageInfo.push({
+                ...user,
+                totalStorageMB: totalStorageMB.toFixed(2) // Show storage with two decimal places
+            });
+        }
+
+        res.render('move_out/pages/dashboard', {
+            title: 'Admin Dashboard',
+            users: userStorageInfo, // Send users with storage info
+            successMessage: req.query.successMessage || null,
+            errorMessage: req.query.errorMessage || null,
+            isAuthenticated: !!req.user,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Error fetching users or calculating storage:', error);
+        res.status(500).send('Error fetching users or calculating storage.');
+    }
 });
+
 
 
 
@@ -1317,6 +1356,7 @@ router.post('/insurance/item/delete/:itemId', requireLogin, async (req, res) => 
 });
 
 
+
 router.get('/shared-labels', requireLogin, async (req, res) => {
     try {
         const sharedLabels = await getSharedLabels(req.user.UserID); // Fetch shared labels with insurance data
@@ -1465,6 +1505,11 @@ router.post('/contact/send', (req, res) => {
     });
 });
 
+
+function calculateFileSizeInMB(filePath) {
+    const stats = fs.statSync(filePath);
+    return stats.size / (1024 * 1024); // Convert bytes to MB
+}
 
 
 module.exports = router;

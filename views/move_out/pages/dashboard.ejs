@@ -27,6 +27,7 @@
                             <th>Profile Picture</th>
                             <th>Role</th>
                             <th>Status</th>
+                            <th>Storage Used (MB)</th> <!-- New Storage Column -->
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -58,6 +59,11 @@
                                 </td>
 
                                 <td><%= user.IsDeactivated ? 'Deactivated' : 'Active' %></td>
+                                
+                                <!-- Storage Used Column -->
+                                <td>
+                                    <%= user.totalStorageMB %> MB
+                                </td>
 
                                 <td>
                                     <% if (locals.user.AdminLevel >= 1 && user.UserID !== locals.user.UserID && user.AdminLevel <= locals.user.AdminLevel) { %>
