@@ -1,0 +1,18 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="container text-center mt-5">
+    <h2>Enter Access Code for <%= title %></h2>
+
+    <% if (errorMessage) { %>
+        <div class="alert alert-danger"><%= errorMessage %></div>
+    <% } %>
+
+    <form action="/labels/view/<%= labelId %>" method="GET">
+        <div class="form-group">
+            <input type="text" name="code" class="form-control" placeholder="Enter 6-digit access code" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<%- include("./../partials/footer.ejs") %>

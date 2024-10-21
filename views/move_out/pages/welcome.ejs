@@ -1,12 +1,46 @@
 <%- include("./../partials/header.ejs") %>
 
-<div class="container">
-    <h1>Welcome to Alhamad Relocations</h1>
-    <% if (isAuthenticated && user) { %>
-        <p>Hello, <strong><%= user.fullName %></strong>! Welcome back.</p>
-    <% } else { %>
-        <p>Thank you for joining! Feel free to explore the website.</p>
-    <% } %>
+<div class="welcome-container">
+    <div class="hero-section text-center">
+        <h1 class="display-4">Welcome to Alhamad Relocations</h1>
+        <% if (isAuthenticated && user) { %>
+            <p class="lead">Hello, <strong><%= user.Username || user.FullName %></strong>! We're glad to see you again. Let's help you organize your move!</p>
+            <a href="/labels" class="btn btn-primary btn-lg mt-3">View Your Labels</a>
+            <a href="/create-label" class="btn btn-secondary btn-lg mt-3">Create New Label</a>
+        <% } else { %>
+            <p class="lead">Thank you for joining! Feel free to explore the website.</p>
+            <a href="/register" class="btn btn-primary btn-lg mt-3">Get Started</a>
+            <a href="/login" class="btn btn-secondary btn-lg mt-3">Log In</a>
+        <% } %>
+    </div>
+
+    <div class="features-section mt-5">
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-box fa-3x feature-icon"></i>
+                    <h3>Create Labels</h3>
+                    <p>Customize your labels with text, images, and even QR codes. Make moving organized and simple.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-share-alt fa-3x feature-icon"></i>
+                    <h3>Share Public Labels</h3>
+                    <p>Share your public labels with others for an easier collaborative moving experience.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card text-center">
+                    <i class="fas fa-print fa-3x feature-icon"></i>
+                    <h3>Print and Organize</h3>
+                    <p>Print your labels, attach them to your boxes, and let the movers know what's inside at a glance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <%- include("./../partials/footer.ejs") %>

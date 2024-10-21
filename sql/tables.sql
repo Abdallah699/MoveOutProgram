@@ -39,6 +39,7 @@ CREATE TABLE Labels (
     Status ENUM('public', 'private') DEFAULT 'private',
     InsuranceLogo VARCHAR(255),  -- Adding column to store insurance logo path
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    AccessCode VARCHAR(6),
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 

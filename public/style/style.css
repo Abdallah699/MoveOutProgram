@@ -1094,3 +1094,176 @@ textarea.form-control {
         background-position: center;
     }
 }
+
+
+
+.about-container {
+    background-color: #f9f9f9;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.about-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+.about-intro {
+    font-size: 20px;
+    color: #555;
+}
+
+.section-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a1a;
+    border-bottom: 2px solid #0d6efd;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.about-list {
+    list-style: none;
+    padding: 0;
+    font-size: 18px;
+    color: #444;
+}
+
+.about-list li {
+    margin-bottom: 15px;
+    padding-left: 30px;
+    position: relative;
+}
+
+.about-list li::before {
+    content: "✔";
+    color: #0d6efd;
+    font-size: 20px;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.about-thank-you {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0d6efd;
+    margin-bottom: 15px;
+}
+
+.lead {
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .about-title {
+        font-size: 28px;
+    }
+    .section-title {
+        font-size: 24px;
+    }
+    .about-list li {
+        font-size: 16px;
+    }
+}
+
+
+
+
+.welcome-container {
+    padding: 50px 0;
+}
+
+.hero-section {
+    background-color: #f8f9fa;
+    padding: 50px;
+    border-radius: 10px;
+}
+
+.hero-section h1 {
+    font-weight: 700;
+    color: #343a40;
+}
+
+.hero-section p.lead {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.features-section {
+    margin-top: 60px;
+}
+
+.feature-card {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+}
+
+.feature-icon {
+    color: #007bff;
+    margin-bottom: 15px;
+}
+
+.feature-card h3 {
+    margin-top: 20px;
+    color: #343a40;
+}
+
+.feature-card p {
+    color: #6c757d;
+}
+
+.btn-lg {
+    padding: 10px 30px;
+    font-size: 1.2rem;
+}
+
+
+
+.contact-container {
+    background-color: #f9f9f9;
+    padding-top: 60px;
+    padding-bottom: 60px;
+}
+
+.card {
+    border-radius: 12px;
+    border: none;
+}
+
+.card-title {
+    font-weight: bold;
+}
+
+.contact-info ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+.contact-info ul li {
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.contact-info ul li i {
+    margin-right: 10px;
+    color: #007bff;
+}
+
+.social-icons i {
+    color: #007bff;
+    transition: color 0.3s;
+}
+
+.social-icons i:hover {
+    color: #0056b3;
+}

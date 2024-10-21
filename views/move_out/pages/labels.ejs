@@ -51,7 +51,10 @@
                                                     <% } else { %>
                                                         <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
                                                     <% } %>
-                                                    <a href="/labels/edit/<%= label.LabelID %>" class="btn btn-warning">Edit</a>
+
+                                                    <!-- Updated Edit Button with Dynamic Route -->
+                                                    <a href="<%= label.LabelOption === 'insurance' ? '/insurance/edit/' + label.LabelID : '/labels/edit/' + label.LabelID %>" class="btn btn-warning">Edit</a>
+
                                                     <form action="/labels/delete/<%= label.LabelID %>" method="POST" style="display:inline;" class="delete-form">
                                                         <button type="submit" class="btn btn-danger">Delete</button>
                                                     </form>
@@ -233,5 +236,15 @@
         printWindow.onload = function() {
             printWindow.print();
         };
+    });
+
+    // Handle Share Button click
+    $('.share-button').on('click', function() {
+        const labelId = $(this).data('label-id');
+        const labelName = $(this).data('label-name');
+
+        // Set form action dynamically
+        $('#shareForm').attr('action', `/labels/share/${labelId}`);
+        $('#shareModal').modal('show');
     });
 </script>

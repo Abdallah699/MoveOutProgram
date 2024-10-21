@@ -1,0 +1,56 @@
+<%- include("./../partials/header.ejs") %>
+
+<div class="contact-container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Contact Us</h1>
+        <p class="lead">We're here to help. Feel free to reach out for any inquiries or assistance!</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <!-- Contact Form -->
+        <div class="col-lg-6 col-md-8 mb-5">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Send Us a Message</h3>
+                    <form action="/contact/send" method="POST">
+                        <div class="form-group">
+                            <label for="name">Your Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Your Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="Enter your email">
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required placeholder="Enter subject">
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required placeholder="Enter your message"></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="col-lg-4 col-md-6">
+            <div class="contact-info">
+                <h3 class="mb-4 text-center">Our Contact Details</h3>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-map-marker-alt"></i> The AlhamadCity 123</li>
+                    <li><i class="fas fa-phone"></i> +0712312313</li>
+                    <li><i class="fas fa-envelope"></i> alhamadrelocations@gmail.com</li>
+                </ul>
+                <hr>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("./../partials/footer.ejs") %>
