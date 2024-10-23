@@ -7,6 +7,7 @@ MoveOut is a web-based platform designed to help users organize and manage their
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
 - [Usage](#usage)
+- [ER Diagram](#er-diagram)
 - [License](#license)
 
 ## Features
@@ -33,18 +34,63 @@ MoveOut is a web-based platform designed to help users organize and manage their
 
 To run the MoveOut project locally, follow these steps:
 
-1. **Clone the repository**:
+1. **Install Node.js and npm**:
+   
+   First, you need to install Node.js and npm (Node Package Manager). Follow the instructions below for your operating system:
+
+   - **Windows**:
+     1. Visit the [Node.js download page](https://nodejs.org/).
+     2. Download the Windows installer and follow the installation steps.
+     3. Verify the installation by running the following commands in Command Prompt:
+        ```bash
+        node -v
+        npm -v
+        ```
+
+   - **macOS**:
+     1. Install [Homebrew](https://brew.sh/) if you don't have it:
+        ```bash
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        ```
+     2. Use Homebrew to install Node.js:
+        ```bash
+        brew install node
+        ```
+     3. Verify the installation by running:
+        ```bash
+        node -v
+        npm -v
+        ```
+
+   - **Linux**:
+     1. Update your package list and install Node.js:
+        ```bash
+        sudo apt update
+        sudo apt install nodejs npm
+        ```
+     2. Verify the installation by running:
+        ```bash
+        node -v
+        npm -v
+        ```
+
+2. **Clone the repository**:
+   
+   Clone the MoveOut repository to your local machine:
    ```bash
    git clone https://github.com/yourusername/moveout.git
    cd moveout
    ```
 
-2. **Install dependencies**:
+3. **Install dependencies**:
+   
+   Install the required Node.js dependencies:
    ```bash
    npm install
    ```
 
-3. **Configure Environment Variables**:
+4. **Configure Environment Variables**:
+   
    Create a `.env` file in the root directory and add the following:
    ```
    DB_HOST=your_database_host
@@ -55,13 +101,16 @@ To run the MoveOut project locally, follow these steps:
    SESSION_SECRET=your_session_secret
    ```
 
-4. **Run the Application**:
+5. **Run the Application**:
+   
+   Start the server by running:
    ```bash
    npm start
    ```
 
-5. **Access the App**:
-   Visit `http://localhost:3000` in your browser.
+6. **Access the App**:
+   
+   Open your browser and visit `http://localhost:3000` to use the application.
 
 ## Usage
 
@@ -69,7 +118,12 @@ To run the MoveOut project locally, follow these steps:
 - **Create Labels**: Use the "Create Label" feature to generate box labels with text, images, or audio.
 - **Scan QR Codes**: View label details by scanning QR codes with a compatible device.
 - **Share Labels**: Share labels securely by generating a PIN for access.
-- **Profile Managment**: Manage your profile change passowrd, change porfile picture and deactivate your account.
+
+## ER Diagram
+
+Below is the ER diagram that represents the database schema for the MoveOut project:
+
+![ER Diagram](./public/images/ERDiagram.png)
 
 ## License
 
