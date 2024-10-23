@@ -74,22 +74,57 @@ To run the MoveOut project locally, follow these steps:
         npm -v
         ```
 
-2. **Clone the repository**:
+2. **Install MariaDB**:
+
+   To use MariaDB as the database for this project, follow the instructions below for your operating system:
+
+   - **Windows**:
+     1. Download the MariaDB installer from the [official website](https://mariadb.org/download/).
+     2. Run the installer and follow the installation steps.
+
+   - **macOS**:
+     1. Install MariaDB using Homebrew:
+        ```bash
+        brew install mariadb
+        ```
+     2. Start the MariaDB service:
+        ```bash
+        brew services start mariadb
+        ```
+
+   - **Linux**:
+     1. Update your package list and install MariaDB:
+        ```bash
+        sudo apt update
+        sudo apt install mariadb-server
+        ```
+     2. Start the MariaDB service:
+        ```bash
+        sudo systemctl start mariadb
+        ```
+
+   3. **Secure the Installation**:
+      Run the following command to secure your MariaDB installation and set a root password:
+      ```bash
+      sudo mysql_secure_installation
+      ```
+
+3. **Clone the repository**:
    
    Clone the MoveOut repository to your local machine:
    ```bash
-   git clone https://github.com/yourusername/moveout.git
+   git clone https://github.com/Abdallah699/moveout.git
    cd moveout
    ```
 
-3. **Install dependencies**:
+4. **Install dependencies**:
    
    Install the required Node.js dependencies:
    ```bash
    npm install
    ```
 
-4. **Configure Environment Variables**:
+5. **Configure Environment Variables and Database Configuration**:
    
    Create a `.env` file in the root directory and add the following:
    ```
@@ -101,16 +136,37 @@ To run the MoveOut project locally, follow these steps:
    SESSION_SECRET=your_session_secret
    ```
 
-5. **Run the Application**:
+   Update the `config.json` file with the following configuration and replace it with your local hostname:
+   ```json
+   {
+       "host": "localhost",
+       "user": "dbadm",
+       "password": "P@ssw0rd",
+       "database": "moveOut",
+       "multipleStatements": true,
+       "googleClientID": "YOUR_ACTUAL_GOOGLE_CLIENT_ID",
+       "googleClientSecret": "YOUR_ACTUAL_GOOGLE_CLIENT_SECRET"
+   }
+   ```
+   Make sure to create a MariaDB username (`dbadm`) and set the same password (`P@ssw0rd`) as provided above.
+
+6. **Run the Application**:
    
    Start the server by running:
    ```bash
    npm start
    ```
 
-6. **Access the App**:
+7. **Access the App**:
    
-   Open your browser and visit `http://localhost:3000` to use the application.
+   Open your browser and visit `http://localhost:1339/login` to use the application.
+
+8. **Reset the Database**:
+   
+   If you need to reset/setup the database, navigate to the `MoveOutProgram/sql` directory and run the following command:
+   ```bash
+   mariadb < reset.sql
+   ```
 
 ## Usage
 
@@ -124,6 +180,8 @@ To run the MoveOut project locally, follow these steps:
 Below is the ER diagram that represents the database schema for the MoveOut project:
 
 ![ER Diagram](./public/images/ERDiagram.png)
+
+Make sure to replace `./path/to/your/er_diagram.png` with the actual path to your ER diagram image.
 
 ## License
 
