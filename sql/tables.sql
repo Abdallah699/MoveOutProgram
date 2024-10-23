@@ -43,15 +43,15 @@ CREATE TABLE Labels (
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
--- Create Boxes table
-CREATE TABLE Boxes (
-    BoxID INT PRIMARY KEY AUTO_INCREMENT,
-    UserID INT,
-    BoxName VARCHAR(255) NOT NULL,
-    QRCode VARCHAR(255) NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
-);
+-- -- Create Boxes table
+-- CREATE TABLE Boxes (
+--     BoxID INT PRIMARY KEY AUTO_INCREMENT,
+--     UserID INT,
+--     BoxName VARCHAR(255) NOT NULL,
+--     QRCode VARCHAR(255) NOT NULL,
+--     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
+-- );
 
 -- Create LabelContents table
 CREATE TABLE LabelContents (
@@ -65,25 +65,25 @@ CREATE TABLE LabelContents (
     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
 );
 
--- Create BoxContents table
-CREATE TABLE BoxContents (
-    ContentID INT PRIMARY KEY AUTO_INCREMENT,
-    BoxID INT,
-    ContentType ENUM('text', 'audio', 'image') NOT NULL,
-    ContentText TEXT,
-    ContentURL VARCHAR(255),
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (BoxID) REFERENCES Boxes(BoxID) ON DELETE CASCADE
-);
+-- -- Create BoxContents table
+-- CREATE TABLE BoxContents (
+--     ContentID INT PRIMARY KEY AUTO_INCREMENT,
+--     BoxID INT,
+--     ContentType ENUM('text', 'audio', 'image') NOT NULL,
+--     ContentText TEXT,
+--     ContentURL VARCHAR(255),
+--     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (BoxID) REFERENCES Boxes(BoxID) ON DELETE CASCADE
+-- );
 
 -- Create BoxLabels table
-CREATE TABLE BoxLabels (
-    BoxLabelID INT PRIMARY KEY AUTO_INCREMENT,
-    BoxID INT,
-    LabelID INT,
-    FOREIGN KEY (BoxID) REFERENCES Boxes(BoxID) ON DELETE CASCADE,
-    FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
-);
+-- CREATE TABLE BoxLabels (
+--     BoxLabelID INT PRIMARY KEY AUTO_INCREMENT,
+--     BoxID INT,
+--     LabelID INT,
+--     FOREIGN KEY (BoxID) REFERENCES Boxes(BoxID) ON DELETE CASCADE,
+--     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
+-- );
 
 -- Create AuditLog table
 CREATE TABLE AuditLog (
