@@ -13,7 +13,6 @@
                 <p class="label-detail"><strong>Label Visibility:</strong> <%= label.Status %></p>
             </div>
 
-            <!-- Insurance Items Table -->
             <div class="insurance-items-table">
                 <table class="table table-bordered">
                     <thead>
@@ -41,14 +40,12 @@
                 </table>
             </div>
 
-            <!-- Display the Insurance Logo (if available) -->
             <% if (label.insuranceLogo) { %>
                 <div class="text-center mt-4">
                     <img src="/uploads/<%= label.insuranceLogo %>" alt="Insurance Logo" class="img-fluid insurance-logo">
                 </div>
             <% } %>
 
-            <!-- QR Code and Print Button -->
             <div class="qr-code-container text-center mt-4">
                 <img src="<%= qrCode %>" alt="QR Code for <%= label.LabelName %>" id="qrCode" class="qr-code-image">
                 <button class="btn print-btn mt-2" onclick="printQRCode()">Print QR Code</button>

@@ -27,7 +27,7 @@
                             <th>Profile Picture</th>
                             <th>Role</th>
                             <th>Status</th>
-                            <th>Storage Used (MB)</th> <!-- New Storage Column -->
+                            <th>Storage Used (MB)</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -60,7 +60,6 @@
 
                                 <td><%= user.IsDeactivated ? 'Deactivated' : 'Active' %></td>
                                 
-                                <!-- Storage Used Column -->
                                 <td>
                                     <%= user.totalStorageMB %> MB
                                 </td>

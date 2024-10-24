@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title><%= title %></title>
-    <!-- Include your CSS and JS files here -->
 </head>
 <body>
     <h1>Phone Book</h1>
@@ -24,10 +23,8 @@
                     <% } %>
                     <strong><%= userItem.FullName %></strong> - <%= userItem.Email %>
                     <% if (userItem.UserID !== user.UserID) { %>
-                        <!-- Optionally, you can add a link to share labels with this user -->
                         <form method="post" action="/labels/share/labelIdHere">
                             <input type="hidden" name="recipientEmail" value="<%= userItem.Email %>">
-                            <!-- Replace labelIdHere with the actual label ID or implement label selection -->
                             <button type="submit">Share Label</button>
                         </form>
                     <% } %>

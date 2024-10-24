@@ -57,7 +57,7 @@ const upload = multer({
     }
 });
 
-const parseForm = multer(); // For parsing multipart/form-data without files
+const parseForm = multer();
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -115,14 +115,6 @@ router.post("/verify-code", async (req, res) => {
     });
 });
 
-// app.get('/admin', requireLogin, requireAdmin, (req, res) => {
-//     console.log("Admin access granted:", req.user);
-//     res.render('move_out/admin/dashboard', { user: req.user });
-// });
-
-
-
-// routes.js
 router.post('/login', (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
       if (err) {
@@ -148,15 +140,6 @@ router.post('/login', (req, res, next) => {
     })(req, res, next);
   });
   
-  
-
-
-
-
-
-
-
-
 router.get("/welcome", requireLogin, (req, res) => {
     res.render("move_out/pages/welcome.ejs", {
         title: "Welcome Page",
@@ -194,7 +177,6 @@ router.get("/create-label", requireLogin, (req, res) => {
     });
 });
 
-// Updated /create-label/step2 route to parse form data
 router.post("/create-label/step2", requireLogin, parseForm.none(), (req, res) => {
     const { labelDesign, labelName, labelOption, status } = req.body;
 
@@ -211,7 +193,6 @@ router.post("/create-label/step2", requireLogin, parseForm.none(), (req, res) =>
     }
 
     if (labelOption === 'insurance') {
-        // For insurance labels, skip to submit route
         res.redirect(307, '/create-label/submit');
     } else {
         res.render('move_out/pages/label-content.ejs', {
@@ -227,7 +208,6 @@ router.post("/create-label/step2", requireLogin, parseForm.none(), (req, res) =>
     }
 });
 
-// Updated /create-label/submit route
 requireLogin, upload.fields([
     { name: 'contentImages', maxCount: 5 },
     { name: 'contentAudio', maxCount: 1 },
@@ -323,17 +303,16 @@ router.post('/create-label/submit', requireLogin, upload.fields([
         labelOption,
         contentType,
         contentText,
-        status, // Label status (public/private)
-        itemNames, // Insurance item names
-        itemValues, // Insurance item values
-        itemCurrencies // Insurance item currencies
+        status,
+        itemNames,
+        itemValues,
+        itemCurrencies
     } = req.body;
 
     const userId = req.user.UserID;
 
-    let contentData = {}; // Store content details
+    let contentData = {}; 
 
-    // Handle content type (text, audio, image)
     if (contentType === 'text') {
         contentData = { type: 'text', data: contentText };
     } else if (contentType === 'audio') {
@@ -348,7 +327,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
 
     const connection = await createConnection();
     try {
-        // Insert the label into the Labels table
         await connection.query(
             'INSERT INTO Labels (UserID, LabelDesign, LabelName, LabelOption, Status) VALUES (?, ?, ?, ?, ?)',
             [userId, labelDesign, labelName, labelOption, status]
@@ -357,7 +335,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
         const [result] = await connection.query('SELECT LAST_INSERT_ID() AS LabelID');
         const labelId = result[0].LabelID;
 
-        // Insert content based on the content type
         if (contentData.type === 'text') {
             await connection.query(
                 'INSERT INTO LabelContents (LabelID, ContentType, ContentText) VALUES (?, ?, ?)',
@@ -377,22 +354,18 @@ router.post('/create-label/submit', requireLogin, upload.fields([
             }
         }
 
-        // If the label is private, generate and store a 6-digit access code
         if (status === 'private') {
             const accessCode = generateAccessCode();
             await connection.query('UPDATE Labels SET AccessCode = ? WHERE LabelID = ?', [accessCode, labelId]);
         }
 
-        // If the label option is 'insurance', handle insurance-specific content
         if (labelOption === 'insurance') {
             const insuranceLogo = req.files['insuranceLogo'] ? req.files['insuranceLogo'][0].filename : null;
 
-            // Ensure itemNames, itemValues, and itemCurrencies are arrays, even if there's only one item
             let itemNamesArray = Array.isArray(itemNames) ? itemNames : [itemNames];
             let itemValuesArray = Array.isArray(itemValues) ? itemValues : [itemValues];
             let itemCurrenciesArray = Array.isArray(itemCurrencies) ? itemCurrencies : [itemCurrencies];
 
-            // Insert insurance items into the InsuranceBoxItems table
             for (let i = 0; i < itemNamesArray.length; i++) {
                 await connection.query(
                     'INSERT INTO InsuranceBoxItems (LabelID, ItemName, ItemValue, Currency) VALUES (?, ?, ?, ?)',
@@ -400,7 +373,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
                 );
             }
 
-            // Insert insurance logo if available
             if (insuranceLogo) {
                 await connection.query(
                     'INSERT INTO LabelContents (LabelID, ContentType, ContentData) VALUES (?, ?, ?)',
@@ -409,7 +381,6 @@ router.post('/create-label/submit', requireLogin, upload.fields([
             }
         }
 
-        // Redirect to the labels list page after successful submission
         res.redirect('/labels');
     } catch (error) {
         console.error('Error creating label:', error);
@@ -427,19 +398,15 @@ router.get('/labels', requireLogin, async (req, res) => {
     const connection = await createConnection();
 
     try {
-        // Fetch all labels for the user
         const [labels] = await connection.query('SELECT * FROM Labels WHERE UserID = ?', [req.user.UserID]);
 
-        // Fetch all users (excluding the current user)
         const [users] = await connection.query('SELECT UserID, FullName, Email FROM Users WHERE UserID != ?', [req.user.UserID]);
 
         for (let label of labels) {
             if (label.LabelOption === 'insurance') {
-                // Fetch insurance items
                 const [insuranceItems] = await connection.query('SELECT * FROM InsuranceBoxItems WHERE LabelID = ?', [label.LabelID]);
                 label.insuranceItems = insuranceItems;
 
-                // Fetch insurance logo
                 const [logoRows] = await connection.query('SELECT ContentData FROM LabelContents WHERE LabelID = ? AND ContentType = ?', [label.LabelID, 'insuranceLogo']);
                 if (logoRows.length > 0) {
                     label.insuranceLogo = logoRows[0].ContentData;
@@ -449,7 +416,6 @@ router.get('/labels', requireLogin, async (req, res) => {
             }
         }
 
-        // Generate QR codes for each label
         const qrCodes = {};
         for (const label of labels) {
             const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
@@ -462,13 +428,12 @@ router.get('/labels', requireLogin, async (req, res) => {
             qrCodes[label.LabelID] = await QRCode.toDataURL(qrUrl, qrCodeOptions);
         }
 
-        // Before rendering, ensure users is defined
-        console.log('Users:', users); // Add this line to check if users is defined
+        console.log('Users:', users);
 
         res.render('move_out/pages/labels.ejs', {
             labels,
             qrCodes,
-            users, // Pass users to the template
+            users,
             isAuthenticated: true,
             user: req.user
         });
@@ -505,7 +470,6 @@ router.get('/labels/view/:id', requireLogin, async (req, res) => {
         if (label.Status === 'private' && !isOwner) {
             // Check if the access code has already been validated
             if (!req.query.code || req.query.code !== label.AccessCode) {
-                // Render a page to ask for the 6-digit code if it hasn't been validated
                 return res.render('move_out/pages/enter_access_code', {
                     labelId: label.LabelID,
                     errorMessage: req.query.code ? 'Invalid code. Please try again.' : null,
@@ -516,7 +480,6 @@ router.get('/labels/view/:id', requireLogin, async (req, res) => {
             }
         }
 
-        // If the user is the owner or the access code is valid, render the label's contents
         const [labelContents] = await connection.query('SELECT * FROM LabelContents WHERE LabelID = ?', [label.LabelID]);
 
         const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
@@ -533,7 +496,7 @@ router.get('/labels/view/:id', requireLogin, async (req, res) => {
             labelContents,
             qrCode,
             title: `Viewing Label: ${label.LabelName}`,
-            canEdit: isOwner, // Only allow editing if the user is the owner
+            canEdit: isOwner, 
             isAuthenticated: !!req.user,
             user: req.user
         });
@@ -641,7 +604,6 @@ router.post('/labels/edit/:id', requireLogin, upload.fields([
         }
     }
 
-    // If the label is private, generate and store a new access code, else clear it for public labels
     if (status === 'private') {
         const accessCode = generateAccessCode();
         await connection.query('UPDATE Labels SET AccessCode = ? WHERE LabelID = ?', [accessCode, labelId]);
@@ -669,7 +631,6 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
             return res.status(403).send('You do not have permission to share this label.');
         }
 
-        // Find the recipient user by user ID
         const [recipientRows] = await connection.query('SELECT UserID, FullName, Email FROM Users WHERE UserID = ?', [recipientUserId]);
         if (recipientRows.length === 0) {
             return res.status(404).send('Recipient user not found.');
@@ -677,7 +638,6 @@ router.post('/labels/share/:id', requireLogin, async (req, res) => {
 
         const recipientUser = recipientRows[0];
 
-        // Check if the label is already shared with the recipient
         const [existingShare] = await connection.query(
             'SELECT * FROM SharedLabels WHERE LabelID = ? AND RecipientUserID = ?',
             [labelId, recipientUserId]
@@ -1036,45 +996,35 @@ router.get('/account/delete/:token', async (req, res) => {
 router.get('/admin/dashboard', requireLogin, requireAdmin, async (req, res) => {
     const db = require('../config/sql');
     
-    const calculateFileSizeInMB = (filePath) => {
-        if (fs.existsSync(filePath)) {
-            const stats = fs.statSync(filePath);
-            return stats.size / (1024 * 1024); // Convert bytes to MB
-        }
-        return 0;
-    };
-    
     try {
         const [users] = await db.query('SELECT UserID, FullName, Email, ProfilePicture, AdminLevel, IsDeactivated FROM Users');
 
-        // Iterate over users to calculate their storage usage
         const userStorageInfo = [];
         for (const user of users) {
             let totalStorageMB = 0;
 
-            // Profile Picture storage
             if (user.ProfilePicture && user.ProfilePicture !== '/uploads/profile_pictures/default.png') {
                 const profilePicturePath = path.join(__dirname, '..', 'public', user.ProfilePicture);
                 totalStorageMB += calculateFileSizeInMB(profilePicturePath);
             }
 
-            // Label Contents storage (for images, audio, etc.)
             const [labelContents] = await db.query('SELECT ContentData FROM LabelContents WHERE LabelID IN (SELECT LabelID FROM Labels WHERE UserID = ?)', [user.UserID]);
             for (const content of labelContents) {
-                const contentPath = path.join(__dirname, '..', 'public', 'uploads', content.ContentData);
-                totalStorageMB += calculateFileSizeInMB(contentPath);
+                if (content.ContentData) {
+                    const contentPath = path.join(__dirname, '..', 'public', 'uploads', content.ContentData);
+                    totalStorageMB += calculateFileSizeInMB(contentPath);
+                }
             }
 
-            // Add the calculated storage to user data
             userStorageInfo.push({
                 ...user,
-                totalStorageMB: totalStorageMB.toFixed(2) // Show storage with two decimal places
+                totalStorageMB: totalStorageMB.toFixed(2)
             });
         }
 
         res.render('move_out/pages/dashboard', {
             title: 'Admin Dashboard',
-            users: userStorageInfo, // Send users with storage info
+            users: userStorageInfo,
             successMessage: req.query.successMessage || null,
             errorMessage: req.query.errorMessage || null,
             isAuthenticated: !!req.user,
@@ -1103,11 +1053,10 @@ router.get('/admin/users', requireLogin, requireAdmin, async (req, res) => {
 });
 
 router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, res) => {
-    const userId = req.params.id; // Get the user ID from the route parameter
+    const userId = req.params.id;
     const connection = await createConnection();
 
     try {
-        // Fetch the user's current deactivation status and email
         const [user] = await connection.query('SELECT Email, FullName, IsDeactivated FROM Users WHERE UserID = ?', [userId]);
 
         if (user.length === 0) {
@@ -1116,12 +1065,10 @@ router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, r
 
         const userEmail = user[0].Email;
         const userName = user[0].FullName;
-        const newStatus = !user[0].IsDeactivated; // Toggle the deactivation status
+        const newStatus = !user[0].IsDeactivated; 
 
-        // Update the user's status in the database
         await connection.query('UPDATE Users SET IsDeactivated = ? WHERE UserID = ?', [newStatus, userId]);
 
-        // Create transporter for sending emails
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -1130,7 +1077,6 @@ router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, r
             }
         });
 
-        // If the account is deactivated, send a deactivation email
         if (newStatus) {
             const mailOptions = {
                 from: process.env.EMAIL_USER,
@@ -1140,7 +1086,6 @@ router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, r
             };
             await transporter.sendMail(mailOptions);
 
-        // If the account is activated, send an activation email
         } else {
             const mailOptions = {
                 from: process.env.EMAIL_USER,
@@ -1151,7 +1096,6 @@ router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, r
             await transporter.sendMail(mailOptions);
         }
 
-        // Redirect back to the admin dashboard
         res.redirect('/admin/dashboard');
     } catch (error) {
         console.error('Error updating user status or sending email:', error);
@@ -1162,8 +1106,6 @@ router.post('/admin/users/:id/toggle', requireLogin, requireAdmin, async (req, r
         }
     }
 });
-
-
 
 router.get('/admin/send-email', requireLogin, requireAdmin, (req, res) => {
     res.render('admin/send-email', {
@@ -1199,11 +1141,9 @@ router.post('/admin/send-email', requireLogin, requireAdmin, async (req, res) =>
             await transporter.sendMail(mailOptions);
         }
 
-        // Redirect to dashboard with a success message
         res.redirect('/admin/dashboard?successMessage=Emails have been sent successfully!');
     } catch (error) {
         console.error('Error sending emails:', error);
-        // Redirect to dashboard with an error message
         res.redirect('/admin/dashboard?errorMessage=There was an error sending the emails. Please try again.');
     }
 });
@@ -1212,25 +1152,21 @@ router.post('/admin/send-email', requireLogin, requireAdmin, async (req, res) =>
 
 
 router.post('/admin/users/:id/update-role', requireLogin, requireAdmin, async (req, res) => {
-    const userId = req.params.id; // The user whose role is being updated
-    const { AdminLevel } = req.body; // The new role (AdminLevel)
+    const userId = req.params.id; 
+    const { AdminLevel } = req.body;
     const connection = await createConnection();
 
     try {
-        // Ensure the logged-in user is Super Admin (AdminLevel 2)
         if (req.user.AdminLevel !== 2) {
             return res.status(403).send('Access denied. Only Super Admins can change roles.');
         }
 
-        // Ensure Super Admins cannot change their own role
         if (req.user.UserID === parseInt(userId)) {
             return res.status(403).send('You cannot change your own role.');
         }
 
-        // Update the role (AdminLevel) in the database
         await connection.query('UPDATE Users SET AdminLevel = ? WHERE UserID = ?', [AdminLevel, userId]);
 
-        // Redirect back to the admin dashboard after successful update
         res.redirect('/admin/dashboard');
     } catch (error) {
         console.error('Error updating role:', error);
@@ -1251,7 +1187,6 @@ router.get('/insurance/view/:id', requireLogin, async (req, res) => {
     const connection = await createConnection();
 
     try {
-        // Fetch the insurance label details
         const [insuranceLabel] = await connection.query('SELECT * FROM Labels WHERE LabelID = ? AND LabelOption = "insurance"', [labelId]);
         const [insuranceItems] = await connection.query('SELECT * FROM InsuranceBoxItems WHERE LabelID = ?', [labelId]);
 
@@ -1259,8 +1194,7 @@ router.get('/insurance/view/:id', requireLogin, async (req, res) => {
             return res.status(404).send('Insurance label not found.');
         }
 
-        // Generate the QR code
-        const qrUrl = `http://localhost:1339/insurance/view/${labelId}`; // Adjust the URL if necessary
+        const qrUrl = `http://localhost:1339/insurance/view/${labelId}`;
         const qrCodeOptions = {
             color: {
                 dark: '#000000',
@@ -1271,12 +1205,11 @@ router.get('/insurance/view/:id', requireLogin, async (req, res) => {
 
 
 
-        // Render the insurance view page
         res.render('move_out/pages/insurance_view', {
             title: `View Insurance Label: ${insuranceLabel[0].LabelName || 'Insurance Label'}`,
             label: insuranceLabel[0],
             items: insuranceItems,
-            qrCode, // Pass the generated QR code
+            qrCode,
             user: req.user,
             isAuthenticated: true
         });
@@ -1317,7 +1250,6 @@ router.get('/insurance/edit/:labelId', requireLogin, async (req, res) => {
         const [label] = await connection.query('SELECT * FROM Labels WHERE LabelID = ?', [labelId]);
         const [items] = await connection.query('SELECT * FROM InsuranceBoxItems WHERE LabelID = ?', [labelId]);
 
-        // Make sure you pass the `items` array to the EJS template
         res.render('move_out/pages/insurance_edit', { label: label[0], items: items });
     } catch (error) {
         console.error('Error fetching insurance data:', error);
@@ -1336,14 +1268,12 @@ router.get('/insurance/edit/:labelId', requireLogin, async (req, res) => {
 
 
 router.post('/insurance/item/delete/:itemId', requireLogin, async (req, res) => {
-    const itemId = req.params.itemId;  // Get the item ID from the URL
+    const itemId = req.params.itemId;
     const connection = await createConnection();
 
     try {
-        // Delete the item from the InsuranceBoxItems table using the ItemID
         await connection.query('DELETE FROM InsuranceBoxItems WHERE InsuranceItemID = ?', [itemId]);
         
-        // Redirect back to the page
         res.redirect('back');
     } catch (error) {
         console.error('Error deleting insurance item:', error);
@@ -1359,9 +1289,8 @@ router.post('/insurance/item/delete/:itemId', requireLogin, async (req, res) => 
 
 router.get('/shared-labels', requireLogin, async (req, res) => {
     try {
-        const sharedLabels = await getSharedLabels(req.user.UserID); // Fetch shared labels with insurance data
+        const sharedLabels = await getSharedLabels(req.user.UserID);
 
-        // Generate QR codes for each label
         const qrCodes = {};
         for (const label of sharedLabels) {
             const qrUrl = `http://localhost:1339/labels/view/${label.LabelID}`;
@@ -1388,12 +1317,10 @@ router.get('/shared-labels', requireLogin, async (req, res) => {
 
 
 
-// Function to get shared labels along with insurance items and insurance logo
 const getSharedLabels = async (userID) => {
     const connection = await createConnection();
 
     try {
-        // Fetch shared labels
         const [sharedLabels] = await connection.query(`
             SELECT labels.*, users.FullName as SharedBy
             FROM SharedLabels AS shared
@@ -1402,17 +1329,14 @@ const getSharedLabels = async (userID) => {
             WHERE shared.RecipientUserID = ?
         `, [userID]);
 
-        // Fetch insurance items for each label if it's an 'insurance' label
         for (const label of sharedLabels) {
             if (label.LabelOption === 'insurance') {
-                // Fetch insurance items
                 const [insuranceItems] = await connection.query(`
                     SELECT * FROM InsuranceBoxItems WHERE LabelID = ?
                 `, [label.LabelID]);
 
                 label.insuranceItems = insuranceItems;
 
-                // Fetch insurance logo if available
                 const [insuranceLogo] = await connection.query(`
                     SELECT ContentData FROM LabelContents WHERE LabelID = ? AND ContentType = 'insuranceLogo'
                 `, [label.LabelID]);
@@ -1455,7 +1379,6 @@ router.get('/contact', (req, res) => {
 router.post('/contact/send', (req, res) => {
     const { name, email, subject, message } = req.body;
 
-    // Validate the form data
     if (!name || !email || !subject || !message) {
         return res.status(400).render('move_out/pages/contact', {
             title: 'Contact Us',
@@ -1465,24 +1388,21 @@ router.post('/contact/send', (req, res) => {
         });
     }
 
-    // Setup the transporter for sending emails (using Gmail for example)
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.EMAIL_USER, // Your email address
-            pass: process.env.EMAIL_PASS  // Your email password (use app-specific password if using Gmail)
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
         }
     });
 
-    // Email options
     const mailOptions = {
         from: email,
-        to: process.env.CONTACT_RECEIVE_EMAIL || 'support@alhamadrelocations.com',  // Where to receive the contact form emails
+        to: process.env.CONTACT_RECEIVE_EMAIL || 'support@alhamadrelocations.com',
         subject: `Contact Form: ${subject}`,
         text: `You have received a new contact message from ${name} (${email}):\n\n${message}`
     };
 
-    // Send the email
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.error('Error sending contact message:', error);
@@ -1494,7 +1414,6 @@ router.post('/contact/send', (req, res) => {
             });
         }
 
-        // If email sent successfully
         console.log('Message sent: %s', info.messageId);
         return res.render('move_out/pages/contact', {
             title: 'Contact Us',
@@ -1508,7 +1427,7 @@ router.post('/contact/send', (req, res) => {
 
 function calculateFileSizeInMB(filePath) {
     const stats = fs.statSync(filePath);
-    return stats.size / (1024 * 1024); // Convert bytes to MB
+    return stats.size / (1024 * 1024);
 }
 
 

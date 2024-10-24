@@ -21,7 +21,6 @@
                                         <div class="label-image-container position-relative">
                                             <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
 
-                                            <!-- Label Overlay -->
                                             <div class="label-overlay">
                                                 <% if (label.LabelOption !== 'insurance') { %>
                                                     <h5 class="label-name"><%= label.LabelName %></h5>
@@ -43,7 +42,6 @@
                                                 <% } %>
                                             </div>
 
-                                            <!-- Label Hover Overlay with Buttons -->
                                             <div class="label-hover-overlay">
                                                 <div class="btn-group-vertical">
                                                     <% if (label.LabelOption === 'insurance') { %>
@@ -52,7 +50,6 @@
                                                         <a href="/labels/view/<%= label.LabelID %>" class="btn btn-primary">View</a>
                                                     <% } %>
 
-                                                    <!-- Updated Edit Button with Dynamic Route -->
                                                     <a href="<%= label.LabelOption === 'insurance' ? '/insurance/edit/' + label.LabelID : '/labels/edit/' + label.LabelID %>" class="btn btn-warning">Edit</a>
 
                                                     <form action="/labels/delete/<%= label.LabelID %>" method="POST" style="display:inline;" class="delete-form">
@@ -75,7 +72,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- QR Code and Insurance Logo -->
                                         <% if (label.LabelOption === 'insurance') { %>
                                             <div class="logo-qr-container mt-3 d-flex justify-content-between align-items-center">
                                                 <% if (label.insuranceLogo) { %>
@@ -105,7 +101,6 @@
     </div>
 </div>
 
-<!-- Share Modal -->
 <div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <form id="shareForm" method="POST">
@@ -150,7 +145,6 @@
         var insuranceItems = $(this).data('insurance-items');
         var insuranceLogo = $(this).data('insurance-logo');
 
-        // Open a new print window
         var printWindow = window.open('', '_blank', 'width=800,height=600');
         var printContent = `
             <html>
@@ -232,18 +226,15 @@
         printWindow.document.write(printContent);
         printWindow.document.close();
 
-        // Ensure the print dialog appears after the content is fully loaded
         printWindow.onload = function() {
             printWindow.print();
         };
     });
 
-    // Handle Share Button click
     $('.share-button').on('click', function() {
         const labelId = $(this).data('label-id');
         const labelName = $(this).data('label-name');
 
-        // Set form action dynamically
         $('#shareForm').attr('action', `/labels/share/${labelId}`);
         $('#shareModal').modal('show');
     });

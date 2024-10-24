@@ -19,7 +19,7 @@ passport.deserializeUser(async (id, done) => {
         const deserializedUser = user[0];
         console.log('Deserializing user:', deserializedUser);
   
-        done(null, deserializedUser); // Pass the full user object
+        done(null, deserializedUser); 
       } else {
         done(new Error('User not found in the database'), null);
       }

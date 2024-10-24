@@ -1,2 +1,0 @@
-Email,PasswordHash,Salt,FullName,GoogleID,Username,ProfilePicture,EmailVerified,VerificationCode,VerificationExpiresAt,IsDeactivated,DeactivationToken,Role
-admin@moveout.com,$2b$10$examplehash,salt,Admin User,,adminuser,/uploads/profile_pictures/default.png,1,,,'superadmin'

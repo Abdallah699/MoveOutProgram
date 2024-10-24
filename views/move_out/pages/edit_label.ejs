@@ -120,12 +120,10 @@
 
 <script>
     $(document).ready(function() {
-        // Initialize carousel
         $('#contentCarousel').carousel({
             interval: false
         });
 
-        // Handle content type selection for new content
         $('#contentType').on('change', function() {
             var contentType = this.value;
             $('#textContent').hide();
@@ -141,7 +139,6 @@
             }
         });
 
-        // Handle delete content action
         $('.delete-button').on('click', function() {
             var contentId = $(this).data('content-id');
             $('#removedContentInputs').append(
@@ -155,7 +152,6 @@
             var isActive = carouselItem.hasClass('active');
             carouselItem.remove();
 
-            // Check if the deleted item was active, and if so, activate the next item
             if (isActive) {
                 $('#contentCarousel .carousel-item').first().addClass('active');
             }
@@ -164,7 +160,6 @@
                 interval: false
             });
 
-            // Hide the carousel if no items are left
             if ($('#contentCarousel .carousel-item').length === 0) {
                 $('#contentCarousel').hide();
             }

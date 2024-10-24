@@ -17,7 +17,6 @@
                                         <div class="label-image-container position-relative">
                                             <img src="/images/<%= label.LabelDesign %>" alt="Label Design" class="img-fluid label-image">
 
-                                            <!-- Label Overlay -->
                                             <div class="label-overlay">
                                                 <% if (label.LabelOption !== 'insurance') { %>
                                                     <h5 class="label-name"><%= label.LabelName %></h5>
@@ -43,7 +42,6 @@
                                                 <% } %>
                                             </div>
 
-                                            <!-- Label Hover Overlay with Buttons -->
                                             <div class="label-hover-overlay">
                                                 <div class="btn-group-vertical">
                                                     <% if (label.LabelOption === 'insurance') { %>
@@ -65,7 +63,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- QR Code and Insurance Logo -->
                                         <% if (label.LabelOption === 'insurance') { %>
                                             <div class="logo-qr-container mt-3 d-flex justify-content-between align-items-center">
                                                 <% if (label.insuranceLogo) { %>
@@ -106,7 +103,6 @@
         var insuranceItems = $(this).data('insurance-items');
         var insuranceLogo = $(this).data('insurance-logo');
 
-        // Open a new print window
         var printWindow = window.open('', '_blank', 'width=800,height=600');
         var printContent = `
             <html>
@@ -188,7 +184,6 @@
         printWindow.document.write(printContent);
         printWindow.document.close();
 
-        // Ensure the print dialog appears after the content is fully loaded
         printWindow.onload = function() {
             printWindow.print();
         };

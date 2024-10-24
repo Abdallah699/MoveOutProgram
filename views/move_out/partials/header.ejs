@@ -50,7 +50,6 @@
                     <a class="nav-link" href="/contact">Contact</a>
                 </li>
 
-                <!-- Admin Link -->
                 <% if (isAuthenticated && user.AdminLevel >= 1) { %>
                     <li class="nav-item">
                         <a class="nav-link" href="/admin/dashboard"><i class="fas fa-user-shield"></i> Admin</a>
@@ -70,11 +69,9 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" 
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <!-- Profile Picture -->
                             <img src="<%= user.ProfilePicture ? user.ProfilePicture : '/uploads/profile_pictures/default.png' %>" 
                             alt="Profile Picture" 
                             class="profile-pic">
-                            <!-- Display Username if available, otherwise display Full Name -->
                             <%= user.Username || user.FullName %>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="accountDropdown">

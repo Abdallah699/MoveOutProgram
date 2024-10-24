@@ -65,7 +65,6 @@
                         </div>
                     </div>
 
-                    <!-- Insurance fields will appear here when "Insurance" is selected -->
                     <div id="insuranceFields" style="display: none;">
                         <div class="form-group">
                             <label for="insuranceLogo" class="label-form-label"><strong>Upload Insurance Company Logo:</strong></label>
@@ -88,7 +87,6 @@
                                         <option value="USD">USD</option>
                                         <option value="EUR">EUR</option>
                                         <option value="GBP">GBP</option>
-                                        <!-- Add more currencies as needed -->
                                     </select>
                                 </div>
                                 <button type="button" class="btn btn-danger removeItem">Remove Item</button>
@@ -173,7 +171,6 @@
 
         updateInsuranceFields();
 
-        // Update the hidden input field when the carousel changes
         $('#labelCarousel').on('slid.bs.carousel', function () {
             const activeImage = $('.carousel-item.active img').attr('src').split('/').pop();
             $('#labelDesignInput').val(activeImage);

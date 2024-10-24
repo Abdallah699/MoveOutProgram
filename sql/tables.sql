@@ -1,4 +1,3 @@
--- Drop existing tables if they exist to avoid conflicts
 DROP TABLE IF EXISTS SharedLabels;
 DROP TABLE IF EXISTS QRScans;
 DROP TABLE IF EXISTS Sessions;
@@ -23,13 +22,12 @@ CREATE TABLE Users (
     VerificationCode INT,
     VerificationExpiresAt DATETIME,
     RegisteredAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    IsDeactivated BOOLEAN DEFAULT FALSE,  -- Deactivation status
-    DeactivationToken VARCHAR(64) DEFAULT NULL,  -- Token for reactivation or deletion
-    AdminLevel TINYINT DEFAULT 0,  -- 0: Regular user, 1: Admin, 2: Super Admin
+    IsDeactivated BOOLEAN DEFAULT FALSE,
+    DeactivationToken VARCHAR(64) DEFAULT NULL,
+    AdminLevel TINYINT DEFAULT 0,  -- IMPORTANT 0: Regular user, 1: Admin, 2: Super Admin
     CONSTRAINT uc_Email UNIQUE (Email)
 );
 
--- Create Labels table
 CREATE TABLE Labels (
     LabelID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT NOT NULL,
@@ -37,23 +35,12 @@ CREATE TABLE Labels (
     LabelName VARCHAR(255),
     LabelOption VARCHAR(50),
     Status ENUM('public', 'private') DEFAULT 'private',
-    InsuranceLogo VARCHAR(255),  -- Adding column to store insurance logo path
+    InsuranceLogo VARCHAR(255),
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     AccessCode VARCHAR(6),
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
--- -- Create Boxes table
--- CREATE TABLE Boxes (
---     BoxID INT PRIMARY KEY AUTO_INCREMENT,
---     UserID INT,
---     BoxName VARCHAR(255) NOT NULL,
---     QRCode VARCHAR(255) NOT NULL,
---     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
--- );
-
--- Create LabelContents table
 CREATE TABLE LabelContents (
     ContentID INT PRIMARY KEY AUTO_INCREMENT,
     LabelID INT,
@@ -65,27 +52,6 @@ CREATE TABLE LabelContents (
     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
 );
 
--- -- Create BoxContents table
--- CREATE TABLE BoxContents (
---     ContentID INT PRIMARY KEY AUTO_INCREMENT,
---     BoxID INT,
---     ContentType ENUM('text', 'audio', 'image') NOT NULL,
---     ContentText TEXT,
---     ContentURL VARCHAR(255),
---     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---     FOREIGN KEY (BoxID) REFERENCES Boxes(BoxID) ON DELETE CASCADE
--- );
-
--- Create BoxLabels table
--- CREATE TABLE BoxLabels (
---     BoxLabelID INT PRIMARY KEY AUTO_INCREMENT,
---     BoxID INT,
---     LabelID INT,
---     FOREIGN KEY (BoxID) REFERENCES Boxes(BoxID) ON DELETE CASCADE,
---     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
--- );
-
--- Create AuditLog table
 CREATE TABLE AuditLog (
     LogID INT PRIMARY KEY AUTO_INCREMENT,
     UserID INT,
@@ -94,7 +60,6 @@ CREATE TABLE AuditLog (
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
--- Create Sessions table
 CREATE TABLE Sessions (
     SessionID INT PRIMARY KEY AUTO_INCREMENT,
     UserID INT,
@@ -104,7 +69,6 @@ CREATE TABLE Sessions (
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
--- Create QRScans table
 CREATE TABLE QRScans (
     ScanID INT PRIMARY KEY AUTO_INCREMENT,
     LabelID INT,
@@ -112,20 +76,18 @@ CREATE TABLE QRScans (
     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE
 );
 
--- Create SharedLabels table with RecipientUserID
 CREATE TABLE SharedLabels (
     ShareID INT PRIMARY KEY AUTO_INCREMENT,
     LabelID INT NOT NULL,
     ShareToken VARCHAR(255) UNIQUE NOT NULL,
     RecipientEmail VARCHAR(255) NOT NULL,
-    RecipientUserID INT,  -- Adding the RecipientUserID column to track the user
+    RecipientUserID INT, 
     SharedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ExpiresAt TIMESTAMP NULL,
     FOREIGN KEY (LabelID) REFERENCES Labels(LabelID) ON DELETE CASCADE,
     FOREIGN KEY (RecipientUserID) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
--- Create InsuranceBoxItems table
 CREATE TABLE InsuranceBoxItems (
     InsuranceItemID INT PRIMARY KEY AUTO_INCREMENT,
     LabelID INT NOT NULL,

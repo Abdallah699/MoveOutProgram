@@ -1,4 +1,3 @@
-// requireadmin.js
 function requireAdmin(req, res, next) {
     console.log("Checking admin access...");
     console.log("Current user data:", req.user);

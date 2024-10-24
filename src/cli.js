@@ -73,7 +73,7 @@ async function registerUser(email, password, fullName) {
 
     await connection.query(
         'INSERT INTO Users (Email, PasswordHash, Salt, FullName, EmailVerified, VerificationCode, VerificationExpiresAt, AdminLevel) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [email, hashedPassword, salt, fullName, emailVerified, verificationCode, verificationExpiresAt, 0] // Regular users get AdminLevel 0
+        [email, hashedPassword, salt, fullName, emailVerified, verificationCode, verificationExpiresAt, 0] 
     );
 
     connection.end();
@@ -115,7 +115,6 @@ async function verifyEmail(email, verificationCode) {
 async function loginUser(email, password) {
     const connection = await createConnection();
     
-    // Query the database for the user with the provided email
     const [user] = await connection.query(
         'SELECT UserID, FullName, Email, EmailVerified, IsDeactivated, AdminLevel, PasswordHash, Salt FROM Users WHERE Email = ?',
         [email]
@@ -135,7 +134,6 @@ async function loginUser(email, password) {
         return { success: false, message: 'Please verify your email before logging in.' };
     }
 
-    // Check password for regular user
     const isPasswordValid = await bcrypt.compare(password + userData.Salt, userData.PasswordHash);
 
     if (!isPasswordValid) {
@@ -144,7 +142,6 @@ async function loginUser(email, password) {
 
     connection.end();
 
-// cli.js
 return {
     success: true,
     message: 'Login successful!',
@@ -153,8 +150,7 @@ return {
       FullName: userData.FullName,
       Email: userData.Email,
       EmailVerified: userData.EmailVerified,
-      AdminLevel: userData.AdminLevel,  // Ensure AdminLevel is included
-      // Include any other necessary fields
+      AdminLevel: userData.AdminLevel,
     }
   };
   
@@ -218,7 +214,7 @@ async function findOrCreateUserByGoogleId(profile) {
 
         const [result] = await connection.query(
             'INSERT INTO Users (Email, FullName, Username, EmailVerified, GoogleID, ProfilePicture, AdminLevel) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [email, fullName, sanitizedUsername, true, googleId, '/uploads/profile_pictures/default.png', 0]  // Google users start as regular users
+            [email, fullName, sanitizedUsername, true, googleId, '/uploads/profile_pictures/default.png', 0]
         );
 
         connection.end();
@@ -231,7 +227,7 @@ async function findOrCreateUserByGoogleId(profile) {
             EmailVerified: true,
             GoogleID: googleId,
             ProfilePicture: '/uploads/profile_pictures/default.png',
-            AdminLevel: 0  // Default for Google users is also regular user
+            AdminLevel: 0  
         };
     }
 }
