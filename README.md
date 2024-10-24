@@ -170,17 +170,17 @@ To run the MoveOut project locally, follow these steps:
 8. **How to access the admin page**:
 
    First go to maria db by writing in the terminal 
-      ```bash
+      ```
    mariadb
    ```
 
    Then you have to use the database by typing
-         ```bash
+         ```
    use moveOut
    ```
 
    Then you have to pick the user you want to give admin rights to and insert the following command:
-         ```bash
+         ```
    UPDATE Users SET AdminLevel = 2 WHERE Email = "example@gmail.com";
    ```
 
