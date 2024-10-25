@@ -1,3 +1,4 @@
+
 # MoveOut Project
 
 MoveOut is a web-based platform designed to help users organize and manage their moving process by creating customizable labels for moving boxes. The platform provides features such as label creation with text, image, or audio content, secure label sharing via QR codes, and specialized insurance labels.
@@ -202,3 +203,11 @@ Make sure to replace `./path/to/your/er_diagram.png` with the actual path to you
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+## Setting Up Email Integration with Google
+
+1. In your Google Cloud Console, set up OAuth2 credentials for your application ([Google Cloud Console](https://console.cloud.google.com)).
+2. Get your Client ID and Client Secret by following the Google OAuth2 for Email guide.
+3. Copy the `.env` file format shown above and create it in the root directory of the repository.
+4. Fill in your credentials (Client ID and Client Secret) in the `.env` file.
+5. If you encounter any errors please contact me.
